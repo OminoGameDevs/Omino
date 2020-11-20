@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
@@ -32,4 +33,8 @@ public class Game : MonoBehaviour
 		levelNumber = number;
 		Application.LoadLevel("Scene1");
 	}
+
+
+
+    public void Restart() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 }

@@ -19,7 +19,7 @@ public class Omino : MonoBehaviour
 
     public Vector3 center {
 		get {
-            if (!cubes)
+            if (!cubes || cubes.childCount == 0)
                 return transform.position;
 
 			Vector3 result = Vector3.zero;
@@ -396,7 +396,7 @@ public class Omino : MonoBehaviour
 	{
 		Tween.StopAll();
 		
-		cubes.GetComponent<Renderer>().enabled = false;
+		//cubes.GetComponent<Renderer>().enabled = false;
 		//foreach (Transform cube in cubes)
 		//{
 		//	cube.GetComponent<ParticleSystem>().Play();
@@ -409,8 +409,8 @@ public class Omino : MonoBehaviour
   //          );
 		//}
 		
-		Game.instance.Invoke("Win", Game.fadeOutTime);
-		Camera.main.transform.parent.SendMessage("FadeOut");
+		//Game.instance.Invoke("Win", Game.fadeOutTime);
+		//Camera.main.transform.parent.SendMessage("FadeOut");
 		
 		Destroy(this);
 	}
@@ -429,31 +429,44 @@ public class Omino : MonoBehaviour
 		// Holes
 		else if (other.CompareTag("Hole"))
 		{
-			++holed;
-			enteredHoles.Add(other.gameObject);
-			
-			if (holed == cubes.childCount)
-			{
-				int totalHoles = other.transform.parent.childCount;
-				if (enteredHoles.Count == totalHoles)
-					Win();
-				else
-				{
-                    if (dropTween != null) dropTween.Stop();
-                    Tween.Position(
-                        target:           transform,
-                        endValue:         lastPos,
-                        duration:         gravity * 0.5f,
-                        delay:            0f,
-                        easeCurve:        Tween.EaseOut,
-                        completeCallback: OnSpitEnd
-                    );
-				}
+            float lowestY = 999f;
+            Transform lowestCube = null;
+            foreach (Transform cube in cubes)
+            {
+                if (cube.position.y < lowestY)
+                {
+                    lowestY = cube.position.y;
+                    lowestCube = cube;
+                }
+            }
+            if (lowestCube)
+                Destroy(lowestCube.gameObject);
+            if (cubes.childCount == 1)
+                Win();
+			//++holed;
+			//enteredHoles.Add(other.gameObject);
+			//if (holed == cubes.childCount)
+			//{
+				//int totalHoles = other.transform.parent.childCount;
+				//if (enteredHoles.Count == totalHoles)
+					//Win();
+				//else
+				//{
+    //                if (dropTween != null) dropTween.Stop();
+    //                Tween.Position(
+    //                    target:           transform,
+    //                    endValue:         lastPos,
+    //                    duration:         gravity * 0.5f,
+    //                    delay:            0f,
+    //                    easeCurve:        Tween.EaseOut,
+    //                    completeCallback: OnSpitEnd
+    //                );
+				//}
 				
-				holed = 0;
-				enteredHoles.Clear();
-				return;
-			}
+				//holed = 0;
+				//enteredHoles.Clear();
+				//return;
+			//}
 		}
 
 		if (other.CompareTag("World"))

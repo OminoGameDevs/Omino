@@ -16,9 +16,13 @@ public class FollowCamera : MonoBehaviour
         }
         else
         {
-            Vector3 target = FindObjectOfType<Omino>().center;
-            transform.position = target + offset;
-            transform.LookAt(target, Vector3.up);
+            var omino = FindObjectOfType<Omino>();
+            if (omino)
+            {
+                Vector3 target = omino.center;
+                transform.position = target + offset;
+                transform.LookAt(target, Vector3.up);
+            }
         }
     }
 }
