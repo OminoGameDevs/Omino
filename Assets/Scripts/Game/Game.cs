@@ -6,35 +6,35 @@ public class Game : MonoBehaviour
 {
     public const float fadeOutTime = 2f;
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------
+ //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
     public static Game instance { get; private set; }
-	public static int levelNumber { get; private set; }
-    //public static LevelInfo Level { get; private set; }
+    public int levelNumber { get; private set; }
+    public Level level { get; private set; }
+    private Level[] levels;
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 	
-	void Awake()
+	private void Awake()
 	{
 		instance = this;
+        levels = ResourceLoader.GetAll<Level>();
+        LoadLevel(1);
 	}
-	
-	
-	
-	void Win()
+
+	public void Win()
 	{
-		LoadLevel(levelNumber + 1);
+		LoadLevel(levelNumber % levels.Length + 1);
 	}
 	
-	
-	
-	public static void LoadLevel(int number)
+	public void LoadLevel(int number)
 	{
-		levelNumber = number;
-		Application.LoadLevel("Scene1");
+        levelNumber = number;
+        if (level)
+            Destroy(level.gameObject);
+        level = Instantiate(levels[number-1]);
+        level.transform.SetParent(instance.transform);
 	}
 
-
-
-    public void Restart() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    public void Restart() => LoadLevel(levelNumber);
 }

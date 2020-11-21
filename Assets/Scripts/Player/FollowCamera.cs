@@ -9,17 +9,17 @@ public class FollowCamera : MonoBehaviour
 
     private void Update()
     {
-        if (Omino.instance)
+        if (Game.instance && Game.instance.level)
         {
             Vector3 v = default(Vector3);
-            transform.position = Vector3.SmoothDamp(transform.position, Omino.instance.center + offset, ref v, 0.1f);
+            transform.position = Vector3.SmoothDamp(transform.position, Game.instance.level.omino.center + offset, ref v, 0.1f);
         }
         else
         {
             var omino = FindObjectOfType<Omino>();
             if (omino)
             {
-                Vector3 target = omino.center;
+                Vector3 target = omino.center.Round();
                 transform.position = target + offset;
                 transform.LookAt(target, Vector3.up);
             }

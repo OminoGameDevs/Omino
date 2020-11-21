@@ -15,6 +15,8 @@ public class ResourceLoader
         if (typeof(T) == typeof(Shader))         return root + "Shaders/";
         if (typeof(T) == typeof(Texture2D))      return root + "Textures/";
 
+        if (typeof(T) == typeof(Level))          return root + "Prefabs/Levels/";
+
         return root;
     }
 
@@ -42,14 +44,5 @@ public class ResourceLoader
         return cache[path] as T;
     }
 
-    public static T[] GetAll<T>() where T : Object
-    {
-        if (allCache == null)
-            allCache = new Dictionary<System.Type, Object[]>();
-
-        if (!allCache.ContainsKey(typeof(T)))
-            allCache.Add(typeof(T), Resources.LoadAll<T>(Path<T>()));
-
-        return allCache[typeof(T)] as T[];
-    }
+    public static T[] GetAll<T>() where T : Object => Resources.LoadAll<T>(Path<T>());
 }

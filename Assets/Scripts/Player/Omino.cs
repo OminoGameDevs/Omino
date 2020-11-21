@@ -104,7 +104,7 @@ public class Omino : MonoBehaviour
 					else
 					{
 						Vector3 delta = hit.point - touchPos;
-						if (delta.magnitude > 10f)
+						if (delta.magnitude > 1f)
 						{
 							touchPos = hit.point;
 							swipeDir = delta.normalized;
@@ -411,8 +411,7 @@ public class Omino : MonoBehaviour
 		
 		//Game.instance.Invoke("Win", Game.fadeOutTime);
 		//Camera.main.transform.parent.SendMessage("FadeOut");
-		
-		Destroy(this);
+		Game.instance.Win();
 	}
 	
 	

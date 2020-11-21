@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public static class Extensions
 {
-
 	public static Vector3 Orthogonalize(this Vector3 direction)
     {
         float xSize = Mathf.Abs(direction.x);
@@ -29,5 +29,12 @@ public static class Extensions
     {
         float f = Mathf.Pow(10f, decimals);
         return new Vector3(Mathf.Round(vector.x * f) / f, Mathf.Round(vector.y * f) / f, Mathf.Round(vector.z * f) / f);
+    }
+
+    public static void Reset(this Transform t)
+    {
+        t.position = Vector3.zero;
+        t.rotation = Quaternion.identity;
+        t.localScale = Vector3.one;
     }
 }
