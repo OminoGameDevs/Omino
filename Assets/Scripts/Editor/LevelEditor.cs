@@ -22,18 +22,22 @@ public class LevelEditor : EditorWindow
 
     private void OnGUI()
     {
-        // Add Level
-        if (GUILayout.Button("Add Level")) AddLevel();
-        
         // Select Level
+        GUILayout.Label("Select Level");
         var lvlList = new List<string>();
         foreach (var lvl in ResourceLoader.GetAll<Level>())
             lvlList.Add(lvl.name);
+        lvlList.Add("Add New Level");
 
         int index = (level ? lvlList.IndexOf(level.name) : -1);
         int newIndex = EditorGUILayout.Popup(index, lvlList.ToArray());
         if (newIndex != index && newIndex >= 0)
-            LoadLevel(lvlList[newIndex]);
+        {
+            if (newIndex == lvlList.Count-1)
+                AddLevel();
+            else
+                LoadLevel(lvlList[newIndex]);
+        }
 
         // Delete Level
         if (index != -1)
