@@ -504,7 +504,13 @@ public class Omino : MonoBehaviour
 		other.SendMessage("OnOminoEnter", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
 
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("World"))
+            return;
 
+        other.SendMessage("OnOminoStay", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
+    }
 
     private void OnTriggerExit(Collider other)
 	{
