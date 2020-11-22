@@ -152,6 +152,24 @@ public class Omino : MonoBehaviour
 
 
 
+    public Transform GetClosestCube(Vector3 position)
+    {
+        float minSqDist = float.PositiveInfinity;
+        Transform closest = null;
+        foreach (Transform cube in cubes)
+        {
+            float sqDist = (position - cube.position).sqrMagnitude;
+            if (sqDist < minSqDist)
+            {
+                minSqDist = sqDist;
+                closest = cube;
+            }
+        }
+        return closest;
+    }
+
+
+
     private void Roll(Vector3 dir)
 	{
 		Vector3 hPos = dir * -9000f;
@@ -483,7 +501,7 @@ public class Omino : MonoBehaviour
 		//		return;
 		//	}
 		//}
-		other.SendMessage("OnOminoEnter", this, SendMessageOptions.DontRequireReceiver);
+		other.SendMessage("OnOminoEnter", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
 
 
@@ -504,7 +522,7 @@ public class Omino : MonoBehaviour
 		//		return;
 		//	}
 		//}
-		other.SendMessage("OnOminoExit", this, SendMessageOptions.DontRequireReceiver);
+		other.SendMessage("OnOminoExit", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
 
 
@@ -524,6 +542,3 @@ public class Omino : MonoBehaviour
 	}
 	
 }
-
-
-
