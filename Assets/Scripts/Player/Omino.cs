@@ -162,11 +162,6 @@ public class Omino : MonoBehaviour
 		}
 	}
 
-	private void Slide(Vector3 dir)
-	{
-		Debug.Log("Slide");
-	}
-
 
     public Transform GetClosestCube(Vector3 position)
     {
@@ -184,9 +179,28 @@ public class Omino : MonoBehaviour
         return closest;
     }
 
+	private void Slide(Vector3 dir)
+	{
+		//Debug.Log("Slide");
+		//lastPos = gameObject.transform.position;
 
+		rolling = true;
+		float amount = 0;
+		foreach (Transform cube in cubes)
+		{
+			foreach (RaycastHit hit in Physics.RaycastAll(cube.position + dir, Vector3.down, 0.55f))
+			{
+				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+				{
+					amount = 1;
+				}
+			}
+		}
 
-    private void Roll(Vector3 dir)
+		Tween.Position(transform, gameObject.transform.position + dir * 1, 0.3f, 0.0f, completeCallback: OnRollSucceed);
+	}
+
+	private void Roll(Vector3 dir)
 	{
 		Vector3 hPos = dir * -9000f;
 		Quaternion rot = Quaternion.Inverse(Quaternion.LookRotation(dir));
@@ -351,7 +365,14 @@ public class Omino : MonoBehaviour
 			foreach (RaycastHit hit in Physics.RaycastAll(cube.position, Vector3.down, 1f))
 				if (hit.collider.gameObject.name == "Slide")
 				{
-					slide = hit.collider.gameObject.transform.forward;
+					foreach (RaycastHit hit2 in Physics.RaycastAll(cube.position + hit.collider.gameObject.transform.forward, Vector3.down, 1f))
+                    {
+						if (hit2.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle") ||
+                    hit2.collider.CompareTag("Hole"))
+                        {
+							slide = hit.collider.gameObject.transform.forward;
+						}
+                    }
 				}
 	}
 
