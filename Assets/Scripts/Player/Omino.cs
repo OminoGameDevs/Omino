@@ -11,9 +11,9 @@ public class Omino : MonoBehaviour
     private const float gravity = 0.05f;
 
     public static Omino instance { get; private set; }
-	
+
 //----------------------------------------------------------------------------------------------------------------------------------------
-	
+
 	public bool rolling { get; private set; }
     public bool dropping { get; private set; }
 	public Vector3 push { get; private set; }
@@ -30,23 +30,23 @@ public class Omino : MonoBehaviour
 			return result / cubes.childCount;
 		}
 	}
-	
+
 //----------------------------------------------------------------------------------------------------------------------------------------
-	
+
 	private new Camera camera;
 	private Transform cubes;
-	
+
 	private bool touching;
 	private Vector3 touchPos;
 	private Vector3 swipeDir;
-	
+
 	private Vector3 lastDir;
 	private Vector3 lastPos;
-	
+
 	private bool rejected;
 
 	//private Sticker _sticker;
-	
+
 	private int holed;
 	private HashSet<GameObject> enteredHoles = new HashSet<GameObject>();
 
@@ -60,14 +60,14 @@ public class Omino : MonoBehaviour
 	{
 		if (!cube.CompareTag("ColorCube"))
 			return CubeColor.None;
-		
+
 		if (direction == cube.right) 	return CubeColor.Red;
 		if (direction == cube.forward)  return CubeColor.Blue;
 		if (direction == cube.up) 		return CubeColor.Green;
 		if (direction == -cube.right) 	return CubeColor.Cyan;
 		if (direction == -cube.forward) return CubeColor.Yellow;
 		if (direction == -cube.up) 		return CubeColor.Magenta;
-		
+
 		return CubeColor.None;
 	}
 	*/
@@ -82,7 +82,7 @@ public class Omino : MonoBehaviour
 
 		foreach (Transform cube in cubes)
 			cube.gameObject.layer = 0;
-		
+
 		//cubes.gameObject.Merge(Merger.MergeType.Hide);
 	}
 
@@ -92,7 +92,7 @@ public class Omino : MonoBehaviour
 	{
 		if (!instance)
 			instance = this;
-		
+
 		if (Input.GetMouseButton(0))
 		{
 			foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
@@ -121,9 +121,9 @@ public class Omino : MonoBehaviour
 			touching = false;
 			swipeDir = Vector3.zero;
 		}
-		
+
 		Vector3 dir = Vector3.zero;
-		
+
 		if (swipeDir != Vector3.zero)
 			dir = swipeDir.Orthogonalize();
 		else if (Input.GetKey(KeyCode.RightArrow))
@@ -134,7 +134,7 @@ public class Omino : MonoBehaviour
 			dir = Vector3.back;
 		else if (Input.GetKey(KeyCode.UpArrow))
 			dir = Vector3.forward;
-		
+
 		if (lastDir != dir)
 		{
 			lastDir = dir;
@@ -167,11 +167,30 @@ public class Omino : MonoBehaviour
 		Debug.Log("Slide");
 	}
 
-	private void Roll(Vector3 dir)
+
+    public Transform GetClosestCube(Vector3 position)
+    {
+        float minSqDist = float.PositiveInfinity;
+        Transform closest = null;
+        foreach (Transform cube in cubes)
+        {
+            float sqDist = (position - cube.position).sqrMagnitude;
+            if (sqDist < minSqDist)
+            {
+                minSqDist = sqDist;
+                closest = cube;
+            }
+        }
+        return closest;
+    }
+
+
+
+    private void Roll(Vector3 dir)
 	{
 		Vector3 hPos = dir * -9000f;
 		Quaternion rot = Quaternion.Inverse(Quaternion.LookRotation(dir));
-		
+
 		// Get appropriate center point
 		foreach (Transform cube in cubes)
 		{
@@ -182,10 +201,10 @@ public class Omino : MonoBehaviour
 					if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
 					{
 						Vector3 temp = cube.position + Vector3.down * 0.5f + dir * 0.5f;
-						
+
 						Vector3 nTemp = (rot * temp).Round(1);
 						Vector3 nhPos = (rot * hPos).Round(1);
-						
+
 						if (nTemp.z > nhPos.z)
 							hPos = temp;
 						else if (nTemp.z == nhPos.z && nTemp.y > nhPos.y)
@@ -194,13 +213,13 @@ public class Omino : MonoBehaviour
 				}
 			}
 		}
-		
+
 		// Center cubes on center point
 		cubes.parent = transform.parent;
 		transform.rotation = Quaternion.identity;
 		transform.position = hPos;
 		cubes.parent = transform;
-		
+
 		// Roll about center point
 		rolling = true;
 		Vector3 euler = new Vector3(dir.z, 0f, -dir.x);
@@ -222,7 +241,7 @@ public class Omino : MonoBehaviour
 	{
 		// Snap
 		transform.position = transform.position.Round(1);
-		
+
 		if (transform.rotation != Quaternion.identity)
 		{
 			Vector3 temp = transform.eulerAngles.normalized * 180f;
@@ -230,7 +249,7 @@ public class Omino : MonoBehaviour
 			temp2 *= (90f/temp2.magnitude);
 			transform.eulerAngles = temp2 + temp;
 		}
-		
+
 		// Find and assimilate cubes, if none found, find ground, if no ground, drop
 		if (DetectNewCubes() || DetectGround())
 		{
@@ -254,9 +273,9 @@ public class Omino : MonoBehaviour
 			dropping = true;
 		}
 	}
-	
-	
-	
+
+
+
 	// Find and assimilate cubes
 	private bool DetectNewCubes()
 	{
@@ -289,7 +308,7 @@ public class Omino : MonoBehaviour
 							obj.gameObject.layer = 0;
 							obj.SetParent(cubes);
                             obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("Cube");
-							
+
 							found = true;
 							repeat = true;
 						}
@@ -298,15 +317,15 @@ public class Omino : MonoBehaviour
 			}
 		}
 		while (repeat);
-		
+
 		//if (found)
 		//	cubes.gameObject.Merge(Merger.MergeType.Hide);
-		
+
 		return found;
 	}
-	
-	
-	
+
+
+
 	private bool DetectGround()
 	{
 		foreach (Transform cube in cubes)
@@ -363,15 +382,15 @@ public class Omino : MonoBehaviour
             easeCurve:        Tween.EaseLinear,
             completeCallback: OnRollFail
         );
-		
+
 		rejected = true;
 		dropping = false;
 
 		Buzz();
 	}
-		
-	
-		
+
+
+
 	private void OnRollSucceed()
 	{
 		if (IsValid())
@@ -416,20 +435,20 @@ public class Omino : MonoBehaviour
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	private void OnSpitEnd()
 	{
 		Reject();
 	}
-	
-	
-	
+
+
+
 	private void Win()
 	{
 		Tween.StopAll();
-		
+
 		//cubes.GetComponent<Renderer>().enabled = false;
 		//foreach (Transform cube in cubes)
 		//{
@@ -442,14 +461,14 @@ public class Omino : MonoBehaviour
   //              easeCurve: Tween.EaseIn
   //          );
 		//}
-		
+
 		//Game.instance.Invoke("Win", Game.fadeOutTime);
 		//Camera.main.transform.parent.SendMessage("FadeOut");
 		Game.instance.Win();
 	}
-	
-	
-	
+
+
+
 	private void OnTriggerEnter(Collider other)
 	{
 		// Obstacles
@@ -458,7 +477,7 @@ public class Omino : MonoBehaviour
 			Reject();
 			return;
 		}
-		
+
 		// Holes
 		else if (other.CompareTag("Hole"))
 		{
@@ -495,7 +514,7 @@ public class Omino : MonoBehaviour
     //                    completeCallback: OnSpitEnd
     //                );
 				//}
-				
+
 				//holed = 0;
 				//enteredHoles.Clear();
 				//return;
@@ -517,10 +536,16 @@ public class Omino : MonoBehaviour
 		//		return;
 		//	}
 		//}
-		other.SendMessage("OnOminoEnter", this, SendMessageOptions.DontRequireReceiver);
+		other.SendMessage("OnOminoEnter", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
 
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("World"))
+            return;
 
+        other.SendMessage("OnOminoStay", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
+    }
 
     private void OnTriggerExit(Collider other)
 	{
@@ -538,7 +563,7 @@ public class Omino : MonoBehaviour
 		//		return;
 		//	}
 		//}
-		other.SendMessage("OnOminoExit", this, SendMessageOptions.DontRequireReceiver);
+		other.SendMessage("OnOminoExit", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
 
 
@@ -556,8 +581,5 @@ public class Omino : MonoBehaviour
 		//GetComponent<AudioSource>().clip = AudioUtility.Square(440f, 0.002f, 0f, 0.0015f, 0.0005f);
 		//GetComponent<AudioSource>().Play();
 	}
-	
+
 }
-
-
-
