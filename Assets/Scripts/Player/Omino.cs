@@ -16,8 +16,10 @@ public class Omino : MonoBehaviour
 	
 	public bool rolling { get; private set; }
     public bool dropping { get; private set; }
+	public Vector3 push { get; private set; }
+	public Vector3 slide { get; private set; }
 
-    public Vector3 center {
+	public Vector3 center {
 		get {
             if (!cubes || cubes.childCount == 0)
                 return transform.position;
@@ -76,7 +78,8 @@ public class Omino : MonoBehaviour
 	{
 		camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
 		cubes = transform.Find("Cubes");
-		
+
+
 		foreach (Transform cube in cubes)
 			cube.gameObject.layer = 0;
 		
@@ -137,10 +140,19 @@ public class Omino : MonoBehaviour
 			lastDir = dir;
 			rejected = false;
 		}
-		
 		if (!rolling && !dropping)
 		{
-			if (dir != Vector3.zero)
+			if (push != Vector3.zero)
+			{
+				Roll(push);
+				push = Vector3.zero;
+			}
+			else if (slide != Vector3.zero)
+			{
+				Slide(slide);
+				slide = Vector3.zero;
+			}
+			else if (dir != Vector3.zero)
 			{
 				if (!rejected)
 					Roll(dir);
@@ -150,9 +162,12 @@ public class Omino : MonoBehaviour
 		}
 	}
 
+	private void Slide(Vector3 dir)
+	{
+		Debug.Log("Slide");
+	}
 
-
-    private void Roll(Vector3 dir)
+	private void Roll(Vector3 dir)
 	{
 		Vector3 hPos = dir * -9000f;
 		Quaternion rot = Quaternion.Inverse(Quaternion.LookRotation(dir));
@@ -201,9 +216,8 @@ public class Omino : MonoBehaviour
             completeCallback: OnRollSucceed
         );
 	}
-	
-	
-	
+
+
 	private void Detect()
 	{
 		// Snap
@@ -224,6 +238,8 @@ public class Omino : MonoBehaviour
 			holed = 0;
 			enteredHoles.Clear();
 			Blip();
+			DetectPush();
+			DetectSlide();
 		}
 		else
 		{
@@ -299,9 +315,27 @@ public class Omino : MonoBehaviour
 					return true;
 		return false;
 	}
-	
-	
-	
+
+	private void DetectPush()
+	{
+		foreach (Transform cube in cubes)
+			foreach (RaycastHit hit in Physics.RaycastAll(cube.position, Vector3.down, 1f))
+				if (hit.collider.gameObject.name == "Push")
+				{
+					push = hit.collider.gameObject.transform.forward;
+				}
+	}
+
+	private void DetectSlide()
+	{
+		foreach (Transform cube in cubes)
+			foreach (RaycastHit hit in Physics.RaycastAll(cube.position, Vector3.down, 1f))
+				if (hit.collider.gameObject.name == "Slide")
+				{
+					slide = hit.collider.gameObject.transform.forward;
+				}
+	}
+
 	private bool IsValid()
 	{
 		// Omino must have ground under it
