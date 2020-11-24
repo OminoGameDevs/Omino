@@ -40,7 +40,7 @@ public class Omino : MonoBehaviour
 	private Vector3 touchPos;
 	private Vector3 swipeDir;
 
-	private Vector3 lastDir;
+	public Vector3 lastDir;
 	private Vector3 lastPos;
 
 	private bool rejected;
@@ -307,7 +307,7 @@ public class Omino : MonoBehaviour
 
 							obj.gameObject.layer = 0;
 							obj.SetParent(cubes);
-                            obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("Cube");
+                            obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("GlassCube");
 
 							found = true;
 							repeat = true;
