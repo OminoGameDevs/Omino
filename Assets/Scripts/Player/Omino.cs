@@ -307,9 +307,10 @@ public class Omino : MonoBehaviour
 
 							obj.gameObject.layer = 0;
 							obj.SetParent(cubes);
-                            obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("GlassCube");
+                            obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("Cube");
+                            obj.Find("Eyes").gameObject.SetActive(true);
 
-							found = true;
+                            found = true;
 							repeat = true;
 						}
 					}
