@@ -19,7 +19,7 @@ public class Game : MonoBehaviour
 	{
 		instance = this;
         levels = ResourceLoader.GetAll<Level>();
-        LoadLevel(3);
+        LoadLevel(1);
 	}
 
 	public void Win()
