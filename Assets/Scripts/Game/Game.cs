@@ -5,17 +5,19 @@ using UnityEngine.SceneManagement;
 public class Game : MonoBehaviour
 {
     public const float fadeOutTime = 2f;
+    IGLvlEditor lvlEditor;
 
- //---------------------------------------------------------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
     public static Game instance { get; private set; }
     public int levelNumber { get; private set; }
     public Level level { get; private set; }
-    private Level[] levels;
+    public Level[] levels;
+    public Omino _omino { get; private set; }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
-	
-	private void Awake()
+
+private void Awake()
 	{
 		instance = this;
         levels = ResourceLoader.GetAll<Level>();
@@ -25,7 +27,8 @@ public class Game : MonoBehaviour
 	public void Win()
 	{
 		LoadLevel(levelNumber % levels.Length + 1);
-	}
+        toggleEnable();
+    }
 	
 	public void LoadLevel(int number)
 	{
@@ -37,4 +40,10 @@ public class Game : MonoBehaviour
 	}
 
     public void Restart() => LoadLevel(levelNumber);
+
+    public void toggleEnable()
+    {
+        _omino = level.GetComponentInChildren<Omino>();
+        _omino.enabled = !_omino.enabled;
+    }
 }

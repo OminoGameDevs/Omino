@@ -78,12 +78,11 @@ public class Omino : MonoBehaviour
 	{
 		camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
 		cubes = transform.Find("Cubes");
-
-
 		foreach (Transform cube in cubes)
 			cube.gameObject.layer = 0;
-
 		//cubes.gameObject.Merge(Merger.MergeType.Hide);
+
+		enabled = false;
 	}
 
 
