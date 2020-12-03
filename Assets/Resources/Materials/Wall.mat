@@ -76,8 +76,8 @@ Material:
     - _Surface: 0
     - _WorkflowMode: 1
     - _ZWrite: 1
-    - _yMax: 1.5
-    - _yMin: -2.5
+    - _yMax: -0.5
+    - _yMin: -1.5
     m_Colors:
     - Color_5FD61637: {r: 0, g: 0, b: 0, a: 0}
     - Color_61705D7C: {r: 0.46257564, g: 0.5392042, b: 0.5943396, a: 0}
