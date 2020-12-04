@@ -28,3 +28,4 @@ Material:
     - Color_61705D7C: {r: 1, g: 1, b: 1, a: 0}
     - Color_76D50510: {r: 0.64, g: 0.64, b: 0.64, a: 0}
     - Color_9A39B9AC: {r: 0.1, g: 0.1, b: 0.1, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 0}

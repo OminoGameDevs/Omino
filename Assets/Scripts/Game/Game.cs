@@ -4,9 +4,6 @@ using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
-    public const float fadeOutTime = 2f;
-
- //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
     public static Game instance { get; private set; }
     public int levelNumber { get; private set; }
@@ -24,8 +21,14 @@ public class Game : MonoBehaviour
 
 	public void Win()
 	{
-		LoadLevel(levelNumber % levels.Length + 1);
+        BroadcastMessage("OnLevelEnd", SendMessageOptions.DontRequireReceiver);
+        Invoke("NextLevel", Constants.fadeOutTime);
 	}
+
+    private void NextLevel()
+    {
+        LoadLevel(levelNumber % levels.Length + 1);
+    }
 	
 	public void LoadLevel(int number)
 	{
@@ -34,6 +37,8 @@ public class Game : MonoBehaviour
             Destroy(level.gameObject);
         level = Instantiate(levels[number-1]);
         level.transform.SetParent(instance.transform);
+
+        BroadcastMessage("OnLevelStart", SendMessageOptions.DontRequireReceiver);
 	}
 
     public void Restart() => LoadLevel(levelNumber);

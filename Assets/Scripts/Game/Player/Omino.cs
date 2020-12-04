@@ -6,7 +6,6 @@ using Pixelplacement.TweenSystem;
 
 public class Omino : MonoBehaviour
 {
-    private const float rollTime = 0.2f;
     private const float cooldown = 0.05f;
     private const float gravity = 0.05f;
 
@@ -16,7 +15,9 @@ public class Omino : MonoBehaviour
 
 	public bool rolling { get; private set; }
     public bool dropping { get; private set; }
-	public Vector3 push { get; private set; }
+    public bool pushed { get; private set; }
+    public bool moving => rolling || dropping || pushed;
+    public Vector3 push { get; private set; }
 	public Vector3 slide { get; private set; }
 
 	public Vector3 center {
@@ -30,6 +31,9 @@ public class Omino : MonoBehaviour
 			return result / cubes.childCount;
 		}
 	}
+
+    public Vector3 bottom { get; private set; }
+    private float lastBottomY;
 
 //----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -45,7 +49,9 @@ public class Omino : MonoBehaviour
 
 	private bool rejected;
 
-	//private Sticker _sticker;
+    //private Sticker _sticker;
+
+    private HashSet<GameObject> triggered = new HashSet<GameObject>();
 
 	private int holed;
 	private HashSet<GameObject> enteredHoles = new HashSet<GameObject>();
@@ -72,8 +78,6 @@ public class Omino : MonoBehaviour
 	}
 	*/
 
-
-
     private void Awake()
 	{
 		camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
@@ -86,30 +90,54 @@ public class Omino : MonoBehaviour
 		//cubes.gameObject.Merge(Merger.MergeType.Hide);
 	}
 
-
-
     private void Update()
 	{
 		if (!instance)
 			instance = this;
 
-		if (Input.GetMouseButton(0))
+        // Calculate bottom
+        float minDist = float.PositiveInfinity;
+        Vector3? closestFloor = null;
+        foreach (var hit in Physics.SphereCastAll(center, 0.25f, -Vector3.up))
+        {
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle") && hit.distance < minDist)
+            {
+                minDist = hit.distance;
+                closestFloor = hit.point;
+            }
+        }
+        if (closestFloor.HasValue)
+        {
+            bottom = closestFloor.Value;
+            lastBottomY = bottom.y;
+        }
+        else
+            bottom = new Vector3(center.x, lastBottomY, center.z);
+
+        // Send trigger stay messages
+        if (!rolling)
+            foreach (var obj in triggered)
+                obj.SendMessage("OnOminoStay", GetCubeStackAt(obj.transform.position), SendMessageOptions.DontRequireReceiver);
+
+        if (Input.GetMouseButton(0))
 		{
 			foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
 			{
 				if (hit.collider.CompareTag("TouchSurface"))
 				{
-					if (!touching)
+                    var hitpoint = hit.point + Vector3.Scale(Camera.main.transform.position, new Vector3(1,0,1));
+
+                    if (!touching)
 					{
 						touching = true;
-						touchPos = hit.point;
+						touchPos = hitpoint;
 					}
 					else
 					{
-						Vector3 delta = hit.point - touchPos;
+						Vector3 delta = hitpoint - touchPos;
 						if (delta.magnitude > 1f)
 						{
-							touchPos = hit.point;
+							touchPos = hitpoint;
 							swipeDir = delta.normalized;
 						}
 					}
@@ -140,7 +168,7 @@ public class Omino : MonoBehaviour
 			lastDir = dir;
 			rejected = false;
 		}
-		if (!rolling && !dropping)
+		if (!moving)
 		{
 			if (push != Vector3.zero)
 			{
@@ -162,24 +190,43 @@ public class Omino : MonoBehaviour
 		}
 	}
 
-
-    public Transform GetClosestCube(Vector3 position)
+    public CubeStack GetCubeStackAt(Vector3 position)
     {
-        float minSqDist = float.PositiveInfinity;
-        Transform closest = null;
+        var rest = new List<GameObject>();
+        float minY = float.PositiveInfinity;
+        GameObject bottom = null;
         foreach (Transform cube in cubes)
         {
-            float sqDist = (position - cube.position).sqrMagnitude;
-            if (sqDist < minSqDist)
+            if (Mathf.Abs(position.x - cube.position.x) > 0.5f || Mathf.Abs(position.z - cube.position.z) > 0.5f)
+                continue;
+
+            rest.Add(cube.gameObject);
+
+            if (cube.position.y < minY)
             {
-                minSqDist = sqDist;
-                closest = cube;
+                minY = cube.position.y;
+                bottom = cube.gameObject;
             }
         }
-        return closest;
+        rest.Remove(bottom);
+        return new CubeStack(bottom, rest.ToArray());
     }
 
-	private void Slide(Vector3 dir)
+    public void Push(Vector3 dir, AnimationCurve ease)
+    {
+        Tween.Stop(GetInstanceID());
+        pushed = true;
+        Tween.Position(
+            target:    transform,
+            endValue:  transform.position + dir,
+            duration:  Constants.transitionTime,
+            delay:     0f,
+            easeCurve: ease,
+            completeCallback: () => pushed = false
+        );
+    }
+
+    private void Slide(Vector3 dir)
 	{
 		//Debug.Log("Slide");
 		//lastPos = gameObject.transform.position;
@@ -229,10 +276,10 @@ public class Omino : MonoBehaviour
 		}
 
 		// Center cubes on center point
-		cubes.parent = transform.parent;
+		cubes.SetParent(transform.parent);
 		transform.rotation = Quaternion.identity;
 		transform.position = hPos;
-		cubes.parent = transform;
+		cubes.SetParent(transform);
 
 		// Roll about center point
 		rolling = true;
@@ -243,13 +290,12 @@ public class Omino : MonoBehaviour
             target:           transform,
             space:            Space.World,
             amount:           euler * 90f,
-            duration:         rollTime,
+            duration:         Constants.transitionTime,
             delay:            0f,
             easeCurve:        Tween.EaseIn,
             completeCallback: OnRollSucceed
         );
 	}
-
 
 	private void Detect()
 	{
@@ -270,7 +316,26 @@ public class Omino : MonoBehaviour
 			dropping = false;
 			holed = 0;
 			enteredHoles.Clear();
-			Blip();
+
+            // Send trigger exit messages
+            foreach (var obj in triggered)
+                obj.SendMessage("OnOminoExit", GetCubeStackAt(obj.transform.position), SendMessageOptions.DontRequireReceiver);
+            triggered.Clear();
+
+            // Send trigger enter messages
+            foreach (Transform cube in cubes)
+            {
+                foreach (RaycastHit hit in Physics.RaycastAll(cube.position + Vector3.up, Vector3.down, 1.499f))
+                {
+                    if (hit.transform.CompareTag("World") || hit.transform.parent == cubes)
+                        continue;
+
+                    triggered.Add(hit.transform.gameObject);
+                    hit.transform.SendMessage("OnOminoEnter", GetCubeStackAt(hit.point), SendMessageOptions.DontRequireReceiver);
+                }
+            }
+
+            Blip();
 			DetectPush();
 			DetectSlide();
 		}
@@ -338,8 +403,6 @@ public class Omino : MonoBehaviour
 		return found;
 	}
 
-
-
 	private bool DetectGround()
 	{
 		foreach (Transform cube in cubes)
@@ -388,8 +451,6 @@ public class Omino : MonoBehaviour
 		return false;
 	}
 
-
-
     private void Reject()
 	{
         // Roll back
@@ -398,7 +459,7 @@ public class Omino : MonoBehaviour
         Tween.Rotation(
             target:           transform,
             endValue:         Vector3.zero,
-            duration:         rollTime * t,
+            duration:         Constants.transitionTime * t,
             delay:            0f,
             easeCurve:        Tween.EaseLinear,
             completeCallback: OnRollFail
@@ -409,8 +470,6 @@ public class Omino : MonoBehaviour
 
 		Buzz();
 	}
-
-
 
 	private void OnRollSucceed()
 	{
@@ -429,42 +488,15 @@ public class Omino : MonoBehaviour
 		Invoke("EndRoll", cooldown);
     }
 
-
-
 	private void EndRoll()
 	{
 		rolling = false;
-		foreach (Transform cube in cubes)
-		{
-			foreach (RaycastHit hit in Physics.RaycastAll(cube.position, Vector3.down, 1f))
-			{
-				if (hit.transform.CompareTag("World") || hit.transform.parent == cubes)
-					continue;
-
-				// Find out if a sticker should be used
-				//RaycastHit hit2;
-				//if (Physics.Raycast(hit.transform.position, hit.transform.up, out hit2, 1f))
-				//{
-				//	Sticker sticker = hit2.collider.GetComponent<Sticker>();
-				//	if (sticker)
-				//	{
-				//		hit.transform.SendMessage("OnOminoEnteredWithSticker", sticker, SendMessageOptions.DontRequireReceiver);
-				//		return;
-				//	}
-				//}
-				hit.transform.SendMessage("OnOminoEntered", this, SendMessageOptions.DontRequireReceiver);
-			}
-		}
 	}
-
-
 
 	private void OnSpitEnd()
 	{
 		Reject();
 	}
-
-
 
 	private void Win()
 	{
@@ -487,8 +519,6 @@ public class Omino : MonoBehaviour
 		//Camera.main.transform.parent.SendMessage("FadeOut");
 		Game.instance.Win();
 	}
-
-
 
 	private void OnTriggerEnter(Collider other)
 	{
@@ -557,7 +587,7 @@ public class Omino : MonoBehaviour
 		//		return;
 		//	}
 		//}
-		other.SendMessage("OnOminoEnter", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
+		//other.SendMessage("OnOminoEnter", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
 
     private void OnTriggerStay(Collider other)
@@ -565,7 +595,7 @@ public class Omino : MonoBehaviour
         if (other.CompareTag("World"))
             return;
 
-        other.SendMessage("OnOminoStay", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
+        //other.SendMessage("OnOminoStay", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
     }
 
     private void OnTriggerExit(Collider other)
@@ -584,10 +614,8 @@ public class Omino : MonoBehaviour
 		//		return;
 		//	}
 		//}
-		other.SendMessage("OnOminoExit", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
+		//other.SendMessage("OnOminoExit", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
 	}
-
-
 
 	private void Blip()
 	{
@@ -603,4 +631,17 @@ public class Omino : MonoBehaviour
 		//GetComponent<AudioSource>().Play();
 	}
 
+    public struct CubeStack
+    {
+        public readonly int size;
+        public readonly GameObject bottom;
+        public readonly GameObject[] rest;
+
+        public CubeStack(GameObject bottom, params GameObject[] rest)
+        {
+            this.bottom = bottom;
+            this.rest = rest;
+            size = rest.Length + 1;
+        }
+    }
 }
