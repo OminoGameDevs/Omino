@@ -81,8 +81,6 @@ public class Omino : MonoBehaviour
 		foreach (Transform cube in cubes)
 			cube.gameObject.layer = 0;
 		//cubes.gameObject.Merge(Merger.MergeType.Hide);
-
-		enabled = false;
 	}
 
 
@@ -91,73 +89,75 @@ public class Omino : MonoBehaviour
 	{
 		if (!instance)
 			instance = this;
-
-		if (Input.GetMouseButton(0))
-		{
-			foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
+		if (Game.instance.playing)
+        {
+			if (Input.GetMouseButton(0))
 			{
-				if (hit.collider.CompareTag("TouchSurface"))
+				foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
 				{
-					if (!touching)
+					if (hit.collider.CompareTag("TouchSurface"))
 					{
-						touching = true;
-						touchPos = hit.point;
-					}
-					else
-					{
-						Vector3 delta = hit.point - touchPos;
-						if (delta.magnitude > 1f)
+						if (!touching)
 						{
+							touching = true;
 							touchPos = hit.point;
-							swipeDir = delta.normalized;
+						}
+						else
+						{
+							Vector3 delta = hit.point - touchPos;
+							if (delta.magnitude > 1f)
+							{
+								touchPos = hit.point;
+								swipeDir = delta.normalized;
+							}
 						}
 					}
 				}
 			}
-		}
-		else
-		{
-			touching = false;
-			swipeDir = Vector3.zero;
-		}
-
-		Vector3 dir = Vector3.zero;
-
-		if (swipeDir != Vector3.zero)
-			dir = swipeDir.Orthogonalize();
-		else if (Input.GetKey(KeyCode.RightArrow))
-			dir = Vector3.right;
-		else if (Input.GetKey(KeyCode.LeftArrow))
-			dir = Vector3.left;
-		else if (Input.GetKey(KeyCode.DownArrow))
-			dir = Vector3.back;
-		else if (Input.GetKey(KeyCode.UpArrow))
-			dir = Vector3.forward;
-
-		if (lastDir != dir)
-		{
-			lastDir = dir;
-			rejected = false;
-		}
-		if (!rolling && !dropping)
-		{
-			if (push != Vector3.zero)
-			{
-				Roll(push);
-				push = Vector3.zero;
-			}
-			else if (slide != Vector3.zero)
-			{
-				Slide(slide);
-				slide = Vector3.zero;
-			}
-			else if (dir != Vector3.zero)
-			{
-				if (!rejected)
-					Roll(dir);
-			}
 			else
+			{
+				touching = false;
+				swipeDir = Vector3.zero;
+			}
+
+			Vector3 dir = Vector3.zero;
+
+			if (swipeDir != Vector3.zero)
+				dir = swipeDir.Orthogonalize();
+			else if (Input.GetKey(KeyCode.RightArrow))
+				dir = Vector3.right;
+			else if (Input.GetKey(KeyCode.LeftArrow))
+				dir = Vector3.left;
+			else if (Input.GetKey(KeyCode.DownArrow))
+				dir = Vector3.back;
+			else if (Input.GetKey(KeyCode.UpArrow))
+				dir = Vector3.forward;
+
+			if (lastDir != dir)
+			{
+				lastDir = dir;
 				rejected = false;
+			}
+			if (!rolling && !dropping)
+			{
+				if (push != Vector3.zero)
+				{
+					Roll(push);
+					push = Vector3.zero;
+				}
+				else if (slide != Vector3.zero)
+				{
+					Slide(slide);
+					slide = Vector3.zero;
+				}
+				else if (dir != Vector3.zero)
+				{
+					if (!rejected)
+						Roll(dir);
+				}
+				else
+					rejected = false;
+			}
 		}
 	}
 

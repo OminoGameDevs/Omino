@@ -9,6 +9,7 @@ TagManager:
   - TouchSurface
   - World
   - Bottom
+  - Marker
   layers:
   - Default
   - TransparentFX

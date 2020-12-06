@@ -20,8 +20,8 @@ public class Level : MonoBehaviour
 
 #if UNITY_EDITOR
 
-    private Transform objects => transform.Find("Objects");
-    private Transform world => transform.Find("World");
+    public Transform objects => transform.Find("Objects");
+    public Transform world => transform.Find("World");
 
     private void Update()
     {
