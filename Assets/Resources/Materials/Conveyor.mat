@@ -1,18 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-2705749039404329520
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  version: 2
 --- !u!21 &2100000
 Material:
   serializedVersion: 6
@@ -20,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GlassCube
-  m_Shader: {fileID: -6465566751694194690, guid: f8164c1517054c74393c5aafedeaa58a,
+  m_Name: Conveyor
+  m_Shader: {fileID: -6465566751694194690, guid: 88754ecd73653be4cb9f359d242c8fb9,
     type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
@@ -53,11 +40,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _NormalFromTexture_177D39F4_Texture_0:
-        m_Texture: {fileID: 2800000, guid: c8bea7ddd9b08b64d9e3e99acebbd4f2, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _NormalFromTexture_6194CFA8_Texture_0:
+    - _NormalFromTexture_D6311D6F_Texture_0:
         m_Texture: {fileID: 2800000, guid: c8bea7ddd9b08b64d9e3e99acebbd4f2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -65,12 +48,12 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _SampleCubemap_171A8DA3_Cube_1:
-        m_Texture: {fileID: 8900000, guid: 8e86449fdae995342af35352c6212712, type: 2}
+    - _SampleTexture2D_5BC86D73_Texture_1:
+        m_Texture: {fileID: 2800000, guid: cf042d6010bb20145989db8561426e1e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _SampleCubemap_EAE131A3_Cube_1:
-        m_Texture: {fileID: 8900000, guid: 8e86449fdae995342af35352c6212712, type: 2}
+    - _SampleTexture2D_803E800_Texture_1:
+        m_Texture: {fileID: 2800000, guid: 55ffa782846def84ab5b24623bb434e4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
@@ -78,12 +61,6 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - Vector1_26BF3A84: 1.13
-    - Vector1_5DA94E47: 0.5
-    - Vector1_8DC048: 1.5
-    - Vector1_8F5AED89: 1
-    - Vector1_938A271A: 1
-    - Vector1_B96D7E5F: 10.66
     - _AlphaClip: 0
     - _Blend: 0
     - _BumpScale: 1
@@ -106,13 +83,21 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
-    - Color_57F07256: {r: 0.627451, g: 0.9882353, b: 1.0666667, a: 0}
-    - Color_5FD61637: {r: 1, g: 1, b: 1, a: 0}
-    - Color_61705D7C: {r: 0.5, g: 0.5, b: 0.5, a: 0}
-    - Color_76839B7E: {r: 0.04705882, g: 2.807843, b: 3.105882, a: 0}
-    - Color_9A39B9AC: {r: 0.1, g: 0.1, b: 0.1, a: 0}
-    - Color_FF42181B: {r: 1, g: 1, b: 1, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.8396226, g: 0, b: 0, a: 1}
+    - _Color2: {r: 0.24705882, g: 0.24705882, b: 0.24705882, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+--- !u!114 &2561662180187023309
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 2

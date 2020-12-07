@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Cube
-  m_Shader: {fileID: -6465566751694194690, guid: a5bce126b403b2f458bc396f1df1711d,
+  m_Name: Eye
+  m_Shader: {fileID: -6465566751694194690, guid: 37237ef890143ee46af729682d298637,
     type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
@@ -20,12 +20,6 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs: []
-    m_Floats:
-    - Vector1_5DA94E47: 0.5
-    - Vector1_8F5AED89: 1
+    m_Floats: []
     m_Colors:
-    - Color_5FD61637: {r: 0.6037736, g: 0.59365004, b: 0.43574226, a: 0}
-    - Color_61705D7C: {r: 1, g: 1, b: 1, a: 0}
-    - Color_76D50510: {r: 0.8867924, g: 0.86455595, b: 0.78221786, a: 0}
-    - Color_9A39B9AC: {r: 0.1, g: 0.1, b: 0.1, a: 0}
-    - _Color: {r: 1, g: 0.7198541, b: 0, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 0}

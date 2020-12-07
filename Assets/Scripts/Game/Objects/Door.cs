@@ -14,10 +14,10 @@ public class Door : Activatable
         Closing
     }
 
-    private const float openDistance = 0.99f;
+    private const float openDistance = 0.999f;
 
     private Vector3 direction => _direction.ToVector();
-    [SerializeField] private Direction _direction = Direction.Down;
+    [SerializeField] private DirectionXYZ _direction = DirectionXYZ.Down;
     [SerializeField] private bool startOpen;
 
     private Transform mesh;
@@ -64,10 +64,10 @@ public class Door : Activatable
                     valueUpdatedCallback: SetOffset
                 );
             }
-            else if (state == State.Closing && !(blocked && (_direction != Direction.Down || Omino.instance.moving)))
+            else if (state == State.Closing && !(blocked && (_direction != DirectionXYZ.Down || Omino.instance.moving)))
             {
-                if (blocked && _direction == Direction.Down)
-                    Omino.instance.Push(Vector3.up, Tween.EaseIn);
+                if (blocked && _direction == DirectionXYZ.Down)
+                    Omino.instance.Slide(Vector3.up, Tween.EaseIn);
 
                 state = State.Idle;
                 mesh.gameObject.layer = LayerMask.NameToLayer("Obstacle");

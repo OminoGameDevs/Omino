@@ -15,8 +15,8 @@ public class Omino : MonoBehaviour
 
 	public bool rolling { get; private set; }
     public bool dropping { get; private set; }
-    public bool pushed { get; private set; }
-    public bool moving => rolling || dropping || pushed;
+    public bool sliding { get; private set; }
+    public bool moving => rolling || dropping || sliding;
     public Vector3 push { get; private set; }
 	public Vector3 slide { get; private set; }
 
@@ -44,10 +44,12 @@ public class Omino : MonoBehaviour
 	private Vector3 touchPos;
 	private Vector3 swipeDir;
 
-	private Vector3 lastDir;
-	private Vector3 lastPos;
+	public Vector3 lastDir;
+	public Vector3 lastPos;
 
 	private bool rejected;
+
+    public Vector3 direction { get; private set; } = Vector3.back;
 
     //private Sticker _sticker;
 
@@ -83,7 +85,6 @@ public class Omino : MonoBehaviour
 		camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
 		cubes = transform.Find("Cubes");
 
-
 		foreach (Transform cube in cubes)
 			cube.gameObject.layer = 0;
 
@@ -100,7 +101,7 @@ public class Omino : MonoBehaviour
         Vector3? closestFloor = null;
         foreach (var hit in Physics.SphereCastAll(center, 0.25f, -Vector3.up))
         {
-            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle") && hit.distance < minDist)
+            if (IsObstacle(hit.collider.gameObject.layer) && hit.distance < minDist)
             {
                 minDist = hit.distance;
                 closestFloor = hit.point;
@@ -211,44 +212,31 @@ public class Omino : MonoBehaviour
         rest.Remove(bottom);
         return new CubeStack(bottom, rest.ToArray());
     }
+ //   private void Slide(Vector3 dir)
+	//{
+	//	//Debug.Log("Slide");
+	//	//lastPos = gameObject.transform.position;
 
-    public void Push(Vector3 dir, AnimationCurve ease)
-    {
-        Tween.Stop(GetInstanceID());
-        pushed = true;
-        Tween.Position(
-            target:    transform,
-            endValue:  transform.position + dir,
-            duration:  Constants.transitionTime,
-            delay:     0f,
-            easeCurve: ease,
-            completeCallback: () => pushed = false
-        );
-    }
+	//	rolling = true;
+	//	float amount = 0;
+	//	foreach (Transform cube in cubes)
+	//	{
+	//		foreach (RaycastHit hit in Physics.RaycastAll(cube.position + dir, Vector3.down, 0.55f))
+	//		{
+	//			if (IsObstacle(hit.collider.gameObject.layer))
+	//			{
+	//				amount = 1;
+	//			}
+	//		}
+	//	}
 
-    private void Slide(Vector3 dir)
-	{
-		//Debug.Log("Slide");
-		//lastPos = gameObject.transform.position;
-
-		rolling = true;
-		float amount = 0;
-		foreach (Transform cube in cubes)
-		{
-			foreach (RaycastHit hit in Physics.RaycastAll(cube.position + dir, Vector3.down, 0.55f))
-			{
-				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
-				{
-					amount = 1;
-				}
-			}
-		}
-
-		Tween.Position(transform, gameObject.transform.position + dir * 1, 0.3f, 0.0f, completeCallback: OnRollSucceed);
-	}
+	//	Tween.Position(transform, gameObject.transform.position + dir * 1, 0.3f, 0.0f, completeCallback: OnRollSucceed);
+	//}
 
 	private void Roll(Vector3 dir)
 	{
+        direction = dir;
+
 		Vector3 hPos = dir * -9000f;
 		Quaternion rot = Quaternion.Inverse(Quaternion.LookRotation(dir));
 
@@ -259,7 +247,7 @@ public class Omino : MonoBehaviour
 			{
 				foreach (RaycastHit hit in Physics.RaycastAll(cube.position + dir*i, Vector3.down, 0.55f))
 				{
-					if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+					if (IsObstacle(hit.collider.gameObject.layer))
 					{
 						Vector3 temp = cube.position + Vector3.down * 0.5f + dir * 0.5f;
 
@@ -293,11 +281,60 @@ public class Omino : MonoBehaviour
             duration:         Constants.transitionTime,
             delay:            0f,
             easeCurve:        Tween.EaseIn,
-            completeCallback: OnRollSucceed
+            completeCallback: () =>
+            {
+                if (IsValid())
+                {
+                    Detect();
+                    lastPos = transform.position;
+                    Invoke("EndRoll", cooldown);
+                }
+                else
+                    Reject();
+            }
         );
 	}
 
-	private void Detect()
+    public bool Slide(Vector3 dir, AnimationCurve ease)
+    {
+        foreach (Transform cube in cubes)
+            foreach (var hit in Physics.RaycastAll(cube.position, dir))
+                if (IsObstacle(hit.collider.gameObject.layer))
+                    return false;
+
+        Tween.Stop(GetInstanceID());
+        sliding = true;
+        Tween.Position(
+            target: transform,
+            endValue: transform.position + dir,
+            duration: Constants.transitionTime,
+            delay: 0f,
+            easeCurve: ease,
+            completeCallback: () =>
+            {
+                Detect();
+                lastPos = transform.position;
+                sliding = false;
+            }
+        );
+        return true;
+    }
+    public bool Slide(Vector3 dir) => Slide(dir, Tween.EaseLinear);
+
+    private void Drop()
+    {
+        dropTween = Tween.Position(
+            target:           transform,
+            endValue:         Vector3.Scale(transform.position, new Vector3(1,0,1)) + Vector3.up * (transform.position.y - 1f),
+            duration:         dropping ? gravity : gravity * 1.04577f,
+            delay:            0f,
+            easeCurve:        dropping ? Tween.EaseLinear : Tween.EaseIn,
+            completeCallback: Detect
+        );
+		dropping = true;
+    }
+
+    private void Detect()
 	{
 		// Snap
 		transform.position = transform.position.Round(1);
@@ -310,12 +347,12 @@ public class Omino : MonoBehaviour
 			transform.eulerAngles = temp2 + temp;
 		}
 
-		// Find and assimilate cubes, if none found, find ground, if no ground, drop
-		if (DetectNewCubes() || DetectGround())
-		{
-			dropping = false;
-			holed = 0;
-			enteredHoles.Clear();
+        // Find and assimilate cubes, if none found, find ground, if no ground, drop
+        if (DetectNewCubes() || DetectGround())
+        {
+            dropping = false;
+            holed = 0;
+            enteredHoles.Clear();
 
             // Send trigger exit messages
             foreach (var obj in triggered)
@@ -336,24 +373,11 @@ public class Omino : MonoBehaviour
             }
 
             Blip();
-			DetectPush();
-			DetectSlide();
-		}
-		else
-		{
-            dropTween = Tween.Position(
-                target:           transform,
-                endValue:         Vector3.Scale(transform.position, new Vector3(1,0,1)) + Vector3.up * (transform.position.y - 1f),
-                duration:         dropping ? gravity : gravity * 1.04577f,
-                delay:            0f,
-                easeCurve:        dropping ? Tween.EaseLinear : Tween.EaseIn,
-                completeCallback: Detect
-            );
-			dropping = true;
-		}
+            DetectPush();
+            DetectSlide();
+        }
+        else Drop();
 	}
-
-
 
 	// Find and assimilate cubes
 	private bool DetectNewCubes()
@@ -381,12 +405,11 @@ public class Omino : MonoBehaviour
 					{
 						// Add other cubes to this shape
 						Transform obj = hit.collider.transform;
-						if (obj.gameObject.layer == LayerMask.NameToLayer("Obstacle") && (obj.CompareTag("Cube")))
+						if (IsObstacle(obj.gameObject.layer) && (obj.CompareTag("Cube")))
 						{
-
 							obj.gameObject.layer = 0;
 							obj.SetParent(cubes);
-                            obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("Cube");
+                            //obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("Cube");
 
 							found = true;
 							repeat = true;
@@ -403,14 +426,15 @@ public class Omino : MonoBehaviour
 		return found;
 	}
 
-	private bool DetectGround()
+	private bool DetectGround(Vector3 offset)
 	{
 		foreach (Transform cube in cubes)
-			foreach (RaycastHit hit in Physics.RaycastAll(cube.position, Vector3.down, 1f))
-				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+			foreach (RaycastHit hit in Physics.RaycastAll(cube.position + offset, Vector3.down, 1f))
+				if (IsObstacle(hit.collider.gameObject.layer))
 					return true;
 		return false;
 	}
+    private bool DetectGround() => DetectGround(Vector3.zero);
 
 	private void DetectPush()
 	{
@@ -430,7 +454,7 @@ public class Omino : MonoBehaviour
 				{
 					foreach (RaycastHit hit2 in Physics.RaycastAll(cube.position + hit.collider.gameObject.transform.forward, Vector3.down, 1f))
                     {
-						if (hit2.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle") ||
+						if (IsObstacle(hit2.collider.gameObject.layer) ||
                     hit2.collider.CompareTag("Hole"))
                         {
 							slide = hit.collider.gameObject.transform.forward;
@@ -444,12 +468,14 @@ public class Omino : MonoBehaviour
 		// Omino must have ground under it
 		foreach (Transform cube in cubes)
 			foreach (RaycastHit hit in Physics.RaycastAll(cube.position, Vector3.down))
-				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle") ||
+				if (IsObstacle(hit.collider.gameObject.layer) ||
 					hit.collider.CompareTag("Hole"))
 					return true;
 
 		return false;
 	}
+
+    private bool IsObstacle(int layer) => layer == LayerMask.NameToLayer("Obstacle");
 
     private void Reject()
 	{
@@ -462,7 +488,7 @@ public class Omino : MonoBehaviour
             duration:         Constants.transitionTime * t,
             delay:            0f,
             easeCurve:        Tween.EaseLinear,
-            completeCallback: OnRollFail
+            completeCallback: () => Invoke("EndRoll", cooldown)
         );
 
 		rejected = true;
@@ -470,23 +496,6 @@ public class Omino : MonoBehaviour
 
 		Buzz();
 	}
-
-	private void OnRollSucceed()
-	{
-		if (IsValid())
-		{
-			Detect();
-			lastPos = transform.position;
-			Invoke("EndRoll", cooldown);
-		}
-		else
-			Reject();
-	}
-
-    private void OnRollFail()
-    {
-		Invoke("EndRoll", cooldown);
-    }
 
 	private void EndRoll()
 	{
@@ -523,7 +532,7 @@ public class Omino : MonoBehaviour
 	private void OnTriggerEnter(Collider other)
 	{
 		// Obstacles
-		if (other.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+		if (IsObstacle(other.gameObject.layer))
 		{
 			Reject();
 			return;
