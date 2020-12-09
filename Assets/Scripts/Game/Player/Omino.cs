@@ -1,14 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Linq;
 using Pixelplacement;
 using Pixelplacement.TweenSystem;
 
 public class Omino : MonoBehaviour
 {
-    private const float cooldown = 0.05f;
-    private const float gravity = 0.05f;
-
     public static Omino instance { get; private set; }
 
 //----------------------------------------------------------------------------------------------------------------------------------------
@@ -32,6 +31,8 @@ public class Omino : MonoBehaviour
 		}
 	}
 
+    public Vector3 direction { get; private set; } = Vector3.back;
+
     public Vector3 bottom { get; private set; }
     private float lastBottomY;
 
@@ -48,8 +49,7 @@ public class Omino : MonoBehaviour
 	public Vector3 lastPos;
 
 	private bool rejected;
-
-    public Vector3 direction { get; private set; } = Vector3.back;
+    private bool dontEndMove;
 
     //private Sticker _sticker;
 
@@ -116,7 +116,7 @@ public class Omino : MonoBehaviour
             bottom = new Vector3(center.x, lastBottomY, center.z);
 
         // Send trigger stay messages
-        if (!rolling)
+        if (!moving)
             foreach (var obj in triggered)
                 obj.SendMessage("OnOminoStay", GetCubeStackAt(obj.transform.position), SendMessageOptions.DontRequireReceiver);
 
@@ -171,20 +171,22 @@ public class Omino : MonoBehaviour
 		}
 		if (!moving)
 		{
-			if (push != Vector3.zero)
-			{
-				Roll(push);
-				push = Vector3.zero;
-			}
-			else if (slide != Vector3.zero)
-			{
-				Slide(slide);
-				slide = Vector3.zero;
-			}
-			else if (dir != Vector3.zero)
+			if (dir != Vector3.zero)
 			{
 				if (!rejected)
-					Roll(dir);
+                {
+                    foreach (Transform cube in cubes)
+                    {
+                        var hits = Physics.RaycastAll(cube.position, -Vector3.up, 1f);
+                        if (hits.Any(hit => IsObstacle(hit.collider.gameObject.layer)) && !hits.Any(hit => hit.collider.CompareTag("Ice")))
+                        {
+                            Roll(dir);
+                            break;
+                        }
+                    }
+                    if (!rolling)
+                        Slide(dir);
+                }
 			}
 			else
 				rejected = false;
@@ -287,7 +289,7 @@ public class Omino : MonoBehaviour
                 {
                     Detect();
                     lastPos = transform.position;
-                    Invoke("EndRoll", cooldown);
+                    EndMove();
                 }
                 else
                     Reject();
@@ -297,10 +299,27 @@ public class Omino : MonoBehaviour
 
     public bool Slide(Vector3 dir, AnimationCurve ease)
     {
+        direction = dir;
+
+        bool safe = false;
         foreach (Transform cube in cubes)
-            foreach (var hit in Physics.RaycastAll(cube.position, dir))
+        {
+            // Detect obstacles in front
+            foreach (var hit in Physics.RaycastAll(cube.position, dir, 1f))
                 if (IsObstacle(hit.collider.gameObject.layer))
                     return false;
+
+            // Detect bottomless pits
+            foreach (var hit in Physics.RaycastAll(cube.position + dir, Vector3.down))
+            {
+                if (IsObstacle(hit.collider.gameObject.layer) || hit.collider.CompareTag("Hole"))
+                {
+                    safe = true;
+                    break;
+                }
+            }
+        }
+        if (!safe) return false;
 
         Tween.Stop(GetInstanceID());
         sliding = true;
@@ -314,7 +333,7 @@ public class Omino : MonoBehaviour
             {
                 Detect();
                 lastPos = transform.position;
-                sliding = false;
+                EndMove();
             }
         );
         return true;
@@ -326,7 +345,7 @@ public class Omino : MonoBehaviour
         dropTween = Tween.Position(
             target:           transform,
             endValue:         Vector3.Scale(transform.position, new Vector3(1,0,1)) + Vector3.up * (transform.position.y - 1f),
-            duration:         dropping ? gravity : gravity * 1.04577f,
+            duration:         dropping ? Constants.transitionTime * 0.25f : Constants.transitionTime * 0.25f * 1.04577f,
             delay:            0f,
             easeCurve:        dropping ? Tween.EaseLinear : Tween.EaseIn,
             completeCallback: Detect
@@ -488,7 +507,7 @@ public class Omino : MonoBehaviour
             duration:         Constants.transitionTime * t,
             delay:            0f,
             easeCurve:        Tween.EaseLinear,
-            completeCallback: () => Invoke("EndRoll", cooldown)
+            completeCallback: EndMove
         );
 
 		rejected = true;
@@ -497,9 +516,15 @@ public class Omino : MonoBehaviour
 		Buzz();
 	}
 
-	private void EndRoll()
+	private void EndMove()
 	{
-		rolling = false;
+        if (dontEndMove)
+            dontEndMove = false;
+        else
+        {
+		    rolling = false;
+            sliding = false;
+        }
 	}
 
 	private void OnSpitEnd()

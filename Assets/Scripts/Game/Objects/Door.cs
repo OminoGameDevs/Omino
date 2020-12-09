@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Pixelplacement;
 
+[Orientable(Directions.XYZ)]
 [RequireComponent(typeof(BoxCollider))]
 [ExecuteInEditMode]
 public class Door : Activatable
@@ -16,8 +17,6 @@ public class Door : Activatable
 
     private const float openDistance = 0.999f;
 
-    private Vector3 direction => _direction.ToVector();
-    [SerializeField] private DirectionXYZ _direction = DirectionXYZ.Down;
     [SerializeField] private bool startOpen;
 
     private Transform mesh;
@@ -64,9 +63,9 @@ public class Door : Activatable
                     valueUpdatedCallback: SetOffset
                 );
             }
-            else if (state == State.Closing && !(blocked && (_direction != DirectionXYZ.Down || Omino.instance.moving)))
+            else if (state == State.Closing && !(blocked && (transform.forward != -Vector3.up || Omino.instance.moving)))
             {
-                if (blocked && _direction == DirectionXYZ.Down)
+                if (blocked && transform.forward == -Vector3.up)
                     Omino.instance.Slide(Vector3.up, Tween.EaseIn);
 
                 state = State.Idle;
@@ -82,8 +81,6 @@ public class Door : Activatable
                 );
             }
         }
-        else
-            transform.localRotation = Quaternion.identity;
     }
 
     private void Open()
@@ -102,15 +99,15 @@ public class Door : Activatable
 
     private void SetOffset(float offset)
     {
-        mesh.localPosition = direction * offset * openDistance;
+        mesh.localPosition = Vector3.forward * offset * openDistance;
         float size = Mathf.Lerp(1f, 0.99f, offset);
         mesh.localScale = new Vector3(
-            direction.x == 0 ? size : 1f,
-            direction.y == 0 ? size : 1f,
-            direction.z == 0 ? size : 1f
+            transform.forward.x == 0 ? size : 1f,
+            transform.forward.y == 0 ? size : 1f,
+            transform.forward.z == 0 ? size : 1f
         );
 
-        if (!_direction.IsVertical())
+        if (transform.forward.y == 0)
             trigger.center = Vector3.up * (1-offset);
     }
 
@@ -138,6 +135,6 @@ public class Door : Activatable
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireMesh(ResourceLoader.Get<Mesh>("Arrow"), transform.position, Quaternion.LookRotation(direction));
+        Gizmos.DrawWireMesh(ResourceLoader.Get<Mesh>("Arrow"), transform.position, Quaternion.LookRotation(transform.forward));
     }
 }

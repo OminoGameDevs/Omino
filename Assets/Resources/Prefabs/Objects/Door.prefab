@@ -59,7 +59,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _color: 0
-  _direction: 5
   startOpen: 0
 --- !u!1 &4109312925532931602
 GameObject:

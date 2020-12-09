@@ -1,21 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Pixelplacement;
 
-[Orientable]
 [RequireComponent(typeof(BoxCollider))]
-public class Conveyor : MonoBehaviour
+public class Ice : MonoBehaviour
 {
     private BoxCollider trigger;
+    private ParticleSystem particles;
 
     private void Awake()
     {
         trigger = GetComponent<BoxCollider>();
+        particles = GetComponentInChildren<ParticleSystem>();
     }
 
-    private void OnOminoEnter(Omino.CubeStack stack)
+    private void Update()
     {
-        Omino.instance.Slide(transform.forward);
+        if (!particles.isPlaying)
+            particles.Play();
     }
 }

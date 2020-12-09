@@ -29,6 +29,7 @@ public class OminoCreature : MonoBehaviour
     private float wobbleTime;
 
     private Vector3 lastParentPos;
+    private Vector3 targetPushOffset;
     private Vector3 pushOffset;
     private float interp;
 
@@ -64,7 +65,10 @@ public class OminoCreature : MonoBehaviour
 
         // Push against direction of movement if moving
         if (dir != Vector3.zero)
-            pushOffset = dir * wobbleRadius;
+            targetPushOffset = dir * wobbleRadius;
+
+        Vector3 v = default(Vector3);
+        pushOffset = Vector3.SmoothDamp(pushOffset, targetPushOffset, ref v, 0.05f);
 
         // Wobble back and forth if not moving
         wobbleOffset = Vector3.Lerp(bottomOffset, topOffset, Mathf.Pow(Mathf.Sin(0.5f * Mathf.PI * wobbleTime), 2f));
