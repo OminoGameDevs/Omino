@@ -122,10 +122,20 @@ public class LevelEditor : EditorWindow
 
     private static void LoadLevel(string name)
     {
-        if (AssetDatabase.OpenAsset(ResourceLoader.Get<Level>(name)))
-            Selection.objects = new Object[0];
-        else
-            Debug.LogError("Failed to load level \"" + name + "\"");
+        Level[] levels = ResourceLoader.GetAll<Level>();
+        bool levelFound = false;
+        foreach (Level lvl in levels)
+        {
+            if (lvl.gameObject.name == name)
+            {
+                AssetDatabase.OpenAsset(lvl);
+                levelFound = true;
+            }
+        }
+            if (levelFound)
+                Selection.objects = new Object[0];
+            else
+                Debug.LogError("Failed to load level \"" + name + "\"");
     }
 
     private static void DeleteLevel(string name)

@@ -44,6 +44,8 @@ public class IGLvlEditor : MonoBehaviour
     GraphicRaycaster m_Raycaster;
     EventSystem m_EventSystem;
 
+    private bool selectMode;
+
     void Start()
     {
         camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
