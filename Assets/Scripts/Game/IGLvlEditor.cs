@@ -210,7 +210,7 @@ public class IGLvlEditor : MonoBehaviour
         string name = lvlList[lvlList.Length-1].name;
         editing = false;
         AssetDatabase.DeleteAsset("Assets/Resources/Prefabs/Levels/" + name + ".prefab");
-        Destroy(objects.GetComponentInChildren<Omino>().gameObject);
+        //Destroy(objects.GetComponentInChildren<Omino>().gameObject);
         foreach (Transform child in objects)
         {
            Destroy(child.gameObject);

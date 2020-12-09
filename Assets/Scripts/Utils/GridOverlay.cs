@@ -76,7 +76,7 @@ public class GridOverlay : MonoBehaviour
         lineMaterial.SetPass(0);
 
         GL.Begin(GL.LINES);
-        if (IGLvlEditor.instance)
+        if (IGLvlEditor.instance && IGLvlEditor.instance.marker)
         {
             Vector3 markerPos = IGLvlEditor.instance.marker.transform.position;
             startX = markerPos.x -3;

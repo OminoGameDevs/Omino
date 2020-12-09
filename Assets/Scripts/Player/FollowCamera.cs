@@ -16,7 +16,10 @@ public class FollowCamera : MonoBehaviour
             if (IGLvlEditor.instance && IGLvlEditor.instance.editing)
             {
                 camera.orthographic = true;
-                transform.position = Vector3.SmoothDamp(transform.position, IGLvlEditor.instance.marker.transform.position + offset, ref v, 0.1f);
+                if (IGLvlEditor.instance.marker != null)
+                {
+                    transform.position = Vector3.SmoothDamp(transform.position, IGLvlEditor.instance.marker.transform.position + offset, ref v, 0.1f);
+                }
             }
             else
             {
