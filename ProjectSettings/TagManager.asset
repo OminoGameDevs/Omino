@@ -9,6 +9,9 @@ TagManager:
   - TouchSurface
   - World
   - Bottom
+  - Ice
+  - Slide
+  - Level
   layers:
   - Default
   - TransparentFX
@@ -19,7 +22,7 @@ TagManager:
   - 
   - 
   - Obstacle
-  - 
+  - Ice
   - 
   - 
   - 
