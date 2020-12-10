@@ -9,7 +9,7 @@ public class Game : MonoBehaviour
     public Level level { get; set; }
     public Level[] levels { get; set; }
 
-    IGLvlEditor lvlEditor;
+    public IGLvlEditor lvlEditor;
     private Omino omino;
     public bool playing;
     public bool testPlaying;

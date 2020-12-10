@@ -30,10 +30,12 @@ public class FollowCamera : MonoBehaviour
 
     private void Update()
     {
-        if (!ended)
+        if (!ended && Game.instance.playing)
         {
             Vector3 v = default(Vector3);
             transform.position = Vector3.SmoothDamp(transform.position, Game.instance.level.omino.bottom + offset, ref v, 0.1f);
         }
+        else if (!Game.instance.playing)
+            transform.position = IGLvlEditor.instance.marker.transform.position + offset;
     }
 }

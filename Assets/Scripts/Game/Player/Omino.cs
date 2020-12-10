@@ -96,6 +96,8 @@ public class Omino : MonoBehaviour
 		if (!instance)
 			instance = this;
 
+        if (!Game.instance.playing) return;
+
         // Calculate bottom
         float minDist = float.PositiveInfinity;
         Vector3? closestFloor = null;

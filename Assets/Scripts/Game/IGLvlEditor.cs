@@ -175,6 +175,8 @@ public class IGLvlEditor : MonoBehaviour
         string name = nameRoot + (newLevelIndex > 0 ? " (" + newLevelIndex + ")" : "");
         for (; Resources.Load<Level>(ResourceLoader.Path<Level>() + name); name = nameRoot + " (" + ++newLevelIndex + ")") ;
         var levelObj = Instantiate(ResourceLoader.Get<GameObject>("Prefabs/LevelTemplate"));
+        levelObj.name = name;
+        thisLevelName = name;
         thisLevel = levelObj.GetComponent<Level>();
         PrefabUtility.SaveAsPrefabAsset(levelObj, ResourceLoader.Path<Level>(true) + name + ".prefab");
         Object.DestroyImmediate(levelObj);
