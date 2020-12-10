@@ -109,28 +109,12 @@ public class LevelEditor : EditorWindow
     private static void AddLevel()
     {
         const string nameRoot = "New Level";
-        string name = nameRoot;
+        string name = nameRoot + (newLevelIndex > 0 ? " (" + newLevelIndex + ")" : "");
         for (; Resources.Load<Level>(ResourceLoader.Path<Level>() + name); name = nameRoot + " (" + ++newLevelIndex + ")") ;
-        var levelObj = new GameObject(name);
-        levelObj.AddComponent<MeshCollider>().sharedMesh = ResourceLoader.Get<Mesh>("BigPlane");
-        levelObj.tag = "Level";
-        level = levelObj.AddComponent<Level>();
-
-        var objects = new GameObject("Objects").transform;
-        objects.SetParent(level.transform);
-
-        var world = new GameObject("World").transform;
-        world.SetParent(level.transform);
-
-        var omino = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Omino")) as GameObject;
-        omino.transform.SetParent(objects);
-
-        for (int x = -1; x <= 1; ++x)
-            for (int z = -1; z <= 1; ++z)
-                AddWall(new Vector3(x, -1, z));
-
-        PrefabUtility.SaveAsPrefabAsset(level.gameObject, ResourceLoader.Path<Level>(true) + name + ".prefab");
-        Object.DestroyImmediate(level.gameObject);
+        var levelObj = Instantiate(ResourceLoader.Get<GameObject>("Prefabs/LevelTemplate"));
+        PrefabUtility.SaveAsPrefabAsset(levelObj, ResourceLoader.Path<Level>(true) + name + ".prefab");
+        Object.DestroyImmediate(levelObj);
+        ++newLevelIndex;
 
         LoadLevel(name);
     }

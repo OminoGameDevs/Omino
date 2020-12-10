@@ -13,7 +13,7 @@ using UnityEditor.Experimental.SceneManagement;
 [ExecuteInEditMode]
 public class Level : MonoBehaviour
 {
-    private Transform objectParent {
+    public Transform objectParent {
         get {
             if (!_objectParent)
                 _objectParent = transform.Find("Objects");
@@ -21,7 +21,7 @@ public class Level : MonoBehaviour
         }
     }
     private Transform _objectParent;
-    private Transform world {
+    public Transform world {
         get {
             if (!_world)
                 _world = transform.Find("World");
