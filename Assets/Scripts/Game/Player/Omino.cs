@@ -524,6 +524,7 @@ public class Omino : MonoBehaviour
             dontEndMove = false;
         else
         {
+            FindObjectOfType<AudioManager>().PlaySound("Block");
 		    rolling = false;
             sliding = false;
         }
