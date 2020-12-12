@@ -291,7 +291,7 @@ public class Omino : MonoBehaviour
                 {
                     Detect();
                     lastPos = transform.position;
-                    FindObjectOfType<AudioManager>().PlaySound("Block");
+                    FindObjectOfType<AudioManager>().PlaySound("Roll");
                     EndMove();
                 }
                 else
@@ -326,6 +326,7 @@ public class Omino : MonoBehaviour
 
         Tween.Stop(GetInstanceID());
         sliding = true;
+        FindObjectOfType<AudioManager>().PlaySound("Slide");
         Tween.Position(
             target: transform,
             endValue: transform.position + dir,
