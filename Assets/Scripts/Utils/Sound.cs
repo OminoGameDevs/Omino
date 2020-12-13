@@ -12,6 +12,8 @@ public class Sound{
     [Range(0.1f, 3f)]
     public float pitch;
     public bool isLoop;
+    [Range(-1f, 1f)]
+    public float stereo;
     [HideInInspector]
     public AudioSource source;
 }

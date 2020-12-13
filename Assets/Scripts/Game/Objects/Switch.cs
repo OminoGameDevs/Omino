@@ -36,12 +36,14 @@ public class Switch : Activator
 
     protected override void OnActivate()
     {
+        FindObjectOfType<AudioManager>().PlaySound("Switch");
         Tween.Stop(mesh.GetInstanceID());
         mesh.localScale = new Vector3(1f, 0.001f, 1f);
     }
 
     protected override void OnDeactivate()
     {
+        FindObjectOfType<AudioManager>().PlaySound("Switch");
         Tween.Stop(mesh.GetInstanceID());
         Tween.LocalScale(
             target:    mesh,

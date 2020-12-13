@@ -46,13 +46,36 @@ MonoBehaviour:
   sounds:
   - name: Roll
     clip: {fileID: 8300000, guid: 39d9e311cf7306d48829bbdda9e2f16c, type: 3}
-    volume: 0.5
+    volume: 0.2
     pitch: 1
     isLoop: 0
+    stereo: 0
     source: {fileID: 0}
   - name: Slide
     clip: {fileID: 8300000, guid: dfb81ac86e2ff6c4ab47433cc16c4ae9, type: 3}
-    volume: 0.5
+    volume: 0.2
     pitch: 2.5
     isLoop: 0
+    stereo: 0.35
+    source: {fileID: 0}
+  - name: Reject
+    clip: {fileID: 8300000, guid: be7fa659b2bddb943a02b9793178ade0, type: 3}
+    volume: 0.05
+    pitch: 1
+    isLoop: 0
+    stereo: 0.3
+    source: {fileID: 0}
+  - name: Drop
+    clip: {fileID: 8300000, guid: 1347f0c5e74c57e4b8bd6323c4c08e72, type: 3}
+    volume: 0.1
+    pitch: 1
+    isLoop: 0
+    stereo: 0
+    source: {fileID: 0}
+  - name: Switch
+    clip: {fileID: 8300000, guid: deaf26be576dbd845b40236cd2aa29a6, type: 3}
+    volume: 0.3
+    pitch: 1
+    isLoop: 0
+    stereo: 0
     source: {fileID: 0}

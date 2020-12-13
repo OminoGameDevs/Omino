@@ -354,7 +354,7 @@ public class Omino : MonoBehaviour
             easeCurve:        dropping ? Tween.EaseLinear : Tween.EaseIn,
             completeCallback: Detect
         );
-		dropping = true;
+        dropping = true;
     }
 
     private void Detect()
@@ -517,7 +517,8 @@ public class Omino : MonoBehaviour
 		rejected = true;
 		dropping = false;
 
-		Buzz();
+        FindObjectOfType<AudioManager>().PlaySound("Reject");
+        Buzz();
 	}
 
 	private void EndMove()
@@ -583,7 +584,11 @@ public class Omino : MonoBehaviour
             if (lowestCube)
                 Destroy(lowestCube.gameObject);
             if (cubes.childCount == 1)
+            {
+                FindObjectOfType<AudioManager>().PlaySound("Drop");
                 Win();
+            }
+
 			//++holed;
 			//enteredHoles.Add(other.gameObject);
 			//if (holed == cubes.childCount)
