@@ -10,7 +10,7 @@ public class Omino : MonoBehaviour
 {
     public static Omino instance { get; private set; }
 
-    //----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
 
     public bool rolling { get; private set; }
     public bool dropping { get; private set; }
@@ -274,6 +274,7 @@ public class Omino : MonoBehaviour
                 {
                     Detect();
                     lastPos = transform.position;
+                    FindObjectOfType<AudioManager>().PlaySound("Roll");
                     EndMove();
                 }
                 else
@@ -308,11 +309,12 @@ public class Omino : MonoBehaviour
 
         Tween.Stop(GetInstanceID());
         sliding = true;
+        FindObjectOfType<AudioManager>().PlaySound("Slide");
         Tween.Position(
-            target: transform,
-            endValue: transform.position + dir,
-            duration: Constants.transitionTime,
-            delay: 0f,
+            target:    transform,
+            endValue:  transform.position + dir,
+            duration:  Constants.transitionTime,
+            delay:     0f,
             easeCurve: ease,
             completeCallback: () =>
             {
@@ -377,8 +379,6 @@ public class Omino : MonoBehaviour
                     collider.transform.SendMessage("OnOminoEnter", GetCubeStackAt(cube.position - Vector3.down * 0.5f), SendMessageOptions.DontRequireReceiver);
                 }
             }
-
-            Blip();
         }
         else Drop();
     }
@@ -471,8 +471,8 @@ public class Omino : MonoBehaviour
 		rejected = true;
 		dropping = false;
 
-		Buzz();
-	}
+        FindObjectOfType<AudioManager>().PlaySound("Reject");
+    }
 
 	private void EndMove()
 	{
@@ -555,7 +555,10 @@ public class Omino : MonoBehaviour
             if (lowestCube)
                 Destroy(lowestCube.gameObject);
             if (cubes.childCount == 1)
+            {
+                FindObjectOfType<AudioManager>().PlaySound("Drop");
                 Win();
+            }
 			//++holed;
 			//enteredHoles.Add(other.gameObject);
 			//if (holed == cubes.childCount)
@@ -625,20 +628,6 @@ public class Omino : MonoBehaviour
 		//	}
 		//}
 		//other.SendMessage("OnOminoExit", GetClosestCube(other.transform.position), SendMessageOptions.DontRequireReceiver);
-	}
-
-	private void Blip()
-	{
-		//audio.Stop();
-		//GetComponent<AudioSource>().clip = AudioUtility.Sine(Random.Range(220f, 440f), 0.002f, 0f, 0.0015f, 0.0005f);
-		//GetComponent<AudioSource>().Play();
-	}
-
-	private void Buzz()
-	{
-		//audio.Stop();
-		//GetComponent<AudioSource>().clip = AudioUtility.Square(440f, 0.002f, 0f, 0.0015f, 0.0005f);
-		//GetComponent<AudioSource>().Play();
 	}
 
     public struct CubeStack
