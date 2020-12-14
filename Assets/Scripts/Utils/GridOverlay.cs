@@ -78,7 +78,7 @@ public class GridOverlay : MonoBehaviour
         GL.Begin(GL.LINES);
         if (IGLvlEditor.instance && IGLvlEditor.instance.marker)
         {
-            Vector3 markerPos = IGLvlEditor.instance.marker.transform.position;
+            Vector3 markerPos = IGLvlEditor.instance.markerCenter;
             startX = markerPos.x -3;
             startY = markerPos.y;
             startZ = markerPos.z -3;

@@ -10,6 +10,7 @@ TagManager:
   - World
   - Bottom
   - Marker
+  - EditObject
   layers:
   - Default
   - TransparentFX
