@@ -16,18 +16,44 @@ public class IGLvlEditor : MonoBehaviour
     private static int newLevelIndex;
     public static int editLevelNumber;
     private static Transform objects => Game.instance.level ? Game.instance.level.transform.Find("Objects") : null;
-    private static Transform world => Game.instance.level ? Game.instance.level.transform.Find("World") : null;
+    private static Transform world => Game.instance.level ? Game.instance.level.world : null;
+
+    private GameObject editScreenGO;
 
     public GameObject marker;
+
+    public Vector3 markerCenter
+    {
+        get
+        {
+            if (!marker || marker.transform.childCount == 0)
+                return transform.position;
+
+            Vector3 result = Vector3.zero;
+            foreach (Transform markerCube in marker.transform)
+                result += markerCube.position;
+            return result / marker.transform.childCount;
+        }
+    }
+
     public bool editing;
 
     private new Camera camera;
 
     private Transform cubes;
 
+    Transform baseCube;
+
     private bool touching;
     private Vector3 touchPos;
+    private Vector3 firstTouchPos;
     private Vector3 swipeDir;
+    //private Vector3 currTouchPos;
+
+    //private Vector3 lastTouchPos;
+
+    private bool updateSel = false;
+    private bool uiSwipe = false;
 
     private Vector3 lastDir;
     private Vector3 lastPos;
@@ -44,45 +70,93 @@ public class IGLvlEditor : MonoBehaviour
     GraphicRaycaster m_Raycaster;
     EventSystem m_EventSystem;
 
-    private bool selectMode;
+    private bool selectMode = false;
+    private bool selectMode3D = false;
+
+    private int xMag;
+    private int zMag;
+
+    int deltaX;
+    int deltaZ;
+
+    float totDelta;
+
+    private bool uiTouching;
+    private Vector2 uiTouchPos;
+    private Vector2 uiSwipeDir;
+    private GameObject activeObj;
+    private bool delActive;
+
+    private bool markersRemoved;
 
     void Start()
     {
         camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
     }
 
- 
+
     void Update()
     {
         if (editing)
         {
             if (!instance)
+            {
                 instance = this;
+                editScreenGO = GameObject.Find("EditScreen");
+            }
             if (!marker)
             {
-                marker = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Marker")) as GameObject;
-                marker.transform.position = new Vector3(-2, -1, -1);
+                marker = new GameObject("Marker");
                 marker.transform.parent = objects;
-                lastPos = marker.transform.position;
+                GameObject markerCube = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/MarkerCube")) as GameObject;
+                markerCube.transform.position = new Vector3(-2, -1, -1);
+                markerCube.transform.parent = marker.transform;
+                lastPos = markerCube.transform.position;
+                baseCube = markerCube.transform;
             }
+
+            uiSwipe = false;
 
             if (Input.GetMouseButton(0))
             {
+                markersRemoved = false;
                 bool clickUI = false;
+                uiSwipe = false;
                 PointerEventData pointerData = new PointerEventData(EventSystem.current);
                 pointerData.position = Input.mousePosition;
 
                 List<RaycastResult> results = new List<RaycastResult>();
                 EventSystem.current.RaycastAll(pointerData, results);
-
-                if (results.Count > 0)
+                if (results.Count > 1)
                 {
-                    if (results[0].gameObject.layer == 5)
+                    if (results[1].gameObject.layer == 5)
+                    {
                         clickUI = true;
+                        if (results[1].gameObject.tag == "EditObject")
+                        {
+                            if (results[1].gameObject.name != "DelBtn")
+                                activeObj = results[1].gameObject;
+                            if (!uiTouching)
+                            {
+                                uiTouching = true;
+                                uiTouchPos = pointerData.position;
+                            }
+                            else
+                            {
+                                Vector3 uiDelta = pointerData.position - uiTouchPos;
+                                if (uiDelta.magnitude > 50)
+                                {
+                                    uiTouchPos = pointerData.position;
+                                    uiSwipeDir = uiDelta.Orthogonalize();
+                                    uiSwipe = true;
+                                }
+                            }
+                        }
+                    }
                 }
-                foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
+                if (!clickUI)
                 {
-                    if (!clickUI)
+                    foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
                     {
                         if (hit.collider.CompareTag("TouchSurface"))
                         {
@@ -90,14 +164,25 @@ public class IGLvlEditor : MonoBehaviour
                             {
                                 touching = true;
                                 touchPos = hit.point;
+                                firstTouchPos = hit.point;
                             }
                             else
                             {
                                 Vector3 delta = hit.point - touchPos;
+                                totDelta = (hit.point - firstTouchPos).magnitude;
                                 if (delta.magnitude > 1f)
                                 {
+                                    updateSel = true;
                                     touchPos = hit.point;
                                     swipeDir = delta.normalized;
+                                    deltaX = Mathf.RoundToInt(touchPos.x - firstTouchPos.x);
+                                    deltaZ = Mathf.RoundToInt(touchPos.z - firstTouchPos.z);
+                                    xMag = Mathf.RoundToInt(Mathf.Abs(deltaX));
+                                    zMag = Mathf.RoundToInt(Mathf.Abs(deltaZ));
+                                }
+                                else
+                                {
+                                    updateSel = false;
                                 }
                             }
                         }
@@ -107,7 +192,18 @@ public class IGLvlEditor : MonoBehaviour
             else
             {
                 touching = false;
+                uiTouching = false;
                 swipeDir = Vector3.zero;
+                uiSwipeDir = Vector2.zero;
+                if (totDelta < 0.1)
+                {
+                    if (!markersRemoved && selectMode)
+                    {
+                        removeMarkers();
+                        markersRemoved = true;
+                    }
+
+                }
             }
             Vector3 dir = Vector3.zero;
 
@@ -122,20 +218,157 @@ public class IGLvlEditor : MonoBehaviour
             else if (Input.GetKey(KeyCode.UpArrow))
                 dir = Vector3.forward;
 
-            if (lastDir != dir)
+            if (uiSwipe)
             {
-                if (dir != Vector3.zero)
-                    lastDir = dir;
-            }
-
-            if (!sliding)
-            {
-                if (dir != Vector3.zero)
+                if (uiTouching)
                 {
-                    Slide(dir);
+                    if (uiSwipeDir == Vector2.up)
+                    {
+                        if (delActive)
+                        {
+                            disableDel();
+                        }
+                        else
+                        {
+                            enableRot();
+                        }
+                    }
+                    else if (uiSwipeDir == Vector2.down)
+                    {
+                        enableDel();
+                    }
                 }
             }
-            
+            else
+            {
+                if (selectMode)
+                {
+                    if (dir != Vector3.zero)
+                    {
+                        if (updateSel)
+                        {
+                            if (selectMode3D)
+                            {
+                                addMarkers3D();
+                            }
+                            else
+                            {
+                                addMarkers();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (lastDir != dir)
+                    {
+                        if (dir != Vector3.zero)
+                            lastDir = dir;
+                    }
+
+                    if (!sliding)
+                    {
+                        if (dir != Vector3.zero)
+                        {
+                            Slide(dir);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void enableRot()
+    {
+
+    }
+
+    private void enableDel()
+    {
+        Transform cont = editScreenGO.transform.Find("ScrollView").Find("Viewport").Find("Content");
+        Transform delBtn = editScreenGO.transform.Find("DelBtn");
+        ScrollRect scroll = editScreenGO.transform.Find("ScrollView").GetComponent<ScrollRect>();
+        scroll.horizontal = false;
+        foreach (Transform child in cont)
+        {
+            if (child.gameObject == activeObj)
+            {
+                delBtn.position = child.position;
+                delBtn.gameObject.SetActive(true);
+                delActive = true;
+            }
+        }
+    }
+
+    private void disableDel()
+    {
+        Transform delBtn = editScreenGO.transform.Find("DelBtn");
+        ScrollRect scroll = editScreenGO.transform.Find("ScrollView").GetComponent<ScrollRect>();
+        scroll.horizontal = true;
+        delBtn.gameObject.SetActive(false);
+        delActive = false;
+    }
+
+    private void removeMarkers()
+    {
+        foreach (Transform markerCube in marker.transform)
+        {
+            if (markerCube.position != baseCube.position)
+            {
+                Destroy(markerCube.gameObject);
+            }
+        }
+    }
+
+    private void addMarkers()
+    {
+        int deltaXSign = Mathf.RoundToInt(Mathf.Sign(deltaX));
+        int deltaZSign = Mathf.RoundToInt(Mathf.Sign(deltaZ));
+
+        removeMarkers();
+
+        for (int i = 0; i <= zMag; i++)
+        {
+            for (int j = 0; j <= xMag; j++)
+            {
+                int xVal = j * deltaXSign;
+                int zVal = i * deltaZSign;
+                Vector3 thisPos = baseCube.position + new Vector3(xVal, 0, zVal);
+                if (baseCube.position != thisPos)
+                {
+                    GameObject markerCube = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/MarkerCube")) as GameObject;
+                    markerCube.transform.position = thisPos;
+                    markerCube.transform.parent = marker.transform;
+                }
+            }
+        }
+    }
+
+    private void addMarkers3D()
+    {
+        int deltaXSign = Mathf.RoundToInt(Mathf.Sign(deltaX));
+        int deltaZSign = Mathf.RoundToInt(Mathf.Sign(deltaZ));
+
+        removeMarkers();
+
+        for (int i = 0; i <= zMag; i++)
+        {
+            for (int j = 0; j <= xMag; j++)
+            {
+                for (int k = 0; k <= xMag; k++)
+                {
+                    int xVal = j * deltaXSign;
+                    int yVal = i * deltaZSign;
+                    int zVal = k * deltaXSign;
+                    Vector3 thisPos = baseCube.position + new Vector3(xVal, yVal, zVal);
+                    if (baseCube.position != thisPos)
+                    {
+                        GameObject markerCube = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/MarkerCube")) as GameObject;
+                        markerCube.transform.position = thisPos;
+                        markerCube.transform.parent = marker.transform;
+                    }
+                }
+            }
         }
     }
 
@@ -169,53 +402,12 @@ public class IGLvlEditor : MonoBehaviour
         Slide(lastDir);
     }
 
-    public void AddLevel()
-    {
-        const string nameRoot = "New Level";
-        string name = nameRoot;
-        for (; Resources.Load<Level>(ResourceLoader.Path<Level>() + name); name = nameRoot + " (" + ++newLevelIndex + ")") ;
-        thisLevel = new GameObject(name).AddComponent<Level>();
-        thisLevelName = name;
-        var objects = new GameObject("Objects").transform;
-        objects.SetParent(thisLevel.transform);
-
-        var world = new GameObject("World").transform;
-        world.SetParent(thisLevel.transform);
-
-        var omino = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Omino")) as GameObject;
-        omino.transform.SetParent(objects);
-
-        for (int x = -1; x <= 1; ++x)
-            for (int z = -1; z <= 1; ++z)
-                AddWall(new Vector3(x, -1, z), world);
-        
-        PrefabUtility.SaveAsPrefabAsset(thisLevel.gameObject, ResourceLoader.Path<Level>(true) + name + ".prefab");
-        Object.DestroyImmediate(thisLevel.gameObject);
-        Edit();
-        LoadLevel(name);
-    }
-
-    public void SaveLevel()
-    {
-        PrefabUtility.SaveAsPrefabAsset(thisLevel.gameObject, ResourceLoader.Path<Level>(true) + thisLevelName + ".prefab");
-    }
-
-    public void SaveAndQuit()
-    {
-        stopEdit();
-        Game.instance.LoadLevel(Game.instance.levelNumber);
-    }
-
     public void ScrapLevel()
     {
-        Level[] lvlList = ResourceLoader.GetAll<Level>();
-        string name = lvlList[lvlList.Length-1].name;
-        editing = false;
-        AssetDatabase.DeleteAsset("Assets/Resources/Prefabs/Levels/" + name + ".prefab");
-        //Destroy(objects.GetComponentInChildren<Omino>().gameObject);
+        stopEdit();
         foreach (Transform child in objects)
         {
-           Destroy(child.gameObject);
+            Destroy(child.gameObject);
         }
         foreach (Transform child in world)
         {
@@ -227,11 +419,15 @@ public class IGLvlEditor : MonoBehaviour
 
     public void RestartEditLvl() => LoadLevel(thisLevelName);
 
-    private void LoadLevel(string name)
+    public void LoadLevel(string name)
     {
-        //Debug.Log(name);
+        thisLevelName = name;
         Level lvlToLoad;
         Game game = Game.instance;
+        if (!game.testPlaying)
+        {
+            Edit();
+        }
         game.levels = ResourceLoader.GetAll<Level>();
         bool foundLevel = false;
         editLevelNumber = game.levels.Length;
@@ -252,42 +448,59 @@ public class IGLvlEditor : MonoBehaviour
         }
         if (!foundLevel)
             Debug.LogError("Failed to load level \"" + name + "\"");
-      
-    }
 
-    private static void AddWall(Vector3 position, Transform world)
-    {
-        var wall = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Wall")) as GameObject;
-        wall.name = "Wall";
-        wall.transform.SetParent(world);
-        wall.transform.position = position.Round();
     }
 
     public void AddWorldItem(string name)
     {
-        var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
-        obj.name = name;
-        obj.transform.SetParent(Game.instance.level.world);
-        obj.transform.position = marker.transform.position.Round();
-        obj.transform.rotation = marker.transform.rotation;
-        Slide(lastDir);
+        foreach (Transform markerCube in marker.transform)
+        {
+            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+            obj.name = name;
+            obj.transform.SetParent(Game.instance.level.world);
+            obj.transform.position = markerCube.position.Round();
+            obj.transform.rotation = markerCube.rotation;
+            Slide(lastDir);
+        }
     }
 
     public void AddObjectItem(string name)
     {
-        var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
-        obj.name = name;
-        obj.transform.SetParent(objects);
-        obj.transform.position = marker.transform.position.Round();
-        obj.transform.rotation = marker.transform.rotation;
-        Slide(lastDir);
+        foreach (Transform markerCube in marker.transform)
+        {
+            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+            obj.name = name;
+            obj.transform.SetParent(objects);
+            obj.transform.position = markerCube.position.Round();
+            obj.transform.rotation = markerCube.rotation;
+            Slide(lastDir);
+        }
+    }
+
+    public void RemoveItem()
+    {
+        string add = "Add";
+        string theName = activeObj.name.Replace(add, "");
+        foreach (Transform markerCube in marker.transform)
+        {
+            foreach (Transform child in objects)
+            {
+
+                if (child.position == markerCube.position && child.gameObject.name == theName)
+                    Destroy(child.gameObject);
+            }
+            foreach (Transform child in world)
+            {
+                if (child.position == markerCube.position && child.gameObject.name == theName)
+                    Destroy(child.gameObject);
+            }
+        }
     }
 
     public void stopEdit()
     {
         editing = false;
         marker.SetActive(false);
-        SaveLevel();
     }
 
     public void Edit()
@@ -296,5 +509,23 @@ public class IGLvlEditor : MonoBehaviour
         if (marker)
             marker.SetActive(true);
     }
-}
 
+    public void SelectToggle()
+    {
+        selectMode = !selectMode;
+        GameObject toggle3D = editScreenGO.transform.Find("3DSelectToggle").gameObject;
+        if (selectMode)
+        {
+            toggle3D.SetActive(true);
+        }
+        else
+        {
+            toggle3D.SetActive(false);
+        }
+    }
+
+    public void selectToggle3D()
+    {
+        selectMode3D = !selectMode3D;
+    }
+}
