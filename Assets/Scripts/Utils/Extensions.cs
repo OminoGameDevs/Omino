@@ -31,10 +31,16 @@ public static class Extensions
         return new Vector3(Mathf.Round(vector.x * f) / f, Mathf.Round(vector.y * f) / f, Mathf.Round(vector.z * f) / f);
     }
 
-    public static void Reset(this Transform t)
+    public static Quaternion Round(this Quaternion quat) => Quaternion.Euler(new Vector3(Mathf.Round(quat.eulerAngles.x / 90f) * 90f,
+                                                                                         Mathf.Round(quat.eulerAngles.y / 90f) * 90f,
+                                                                                         Mathf.Round(quat.eulerAngles.z / 90f) * 90f));
+
+    public static Vector3 Abs(this Vector3 v) => new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
+
+    public static void Reset(this Transform t, bool position = true, bool rotation = true, bool scale = true)
     {
-        t.position = Vector3.zero;
-        t.rotation = Quaternion.identity;
-        t.localScale = Vector3.one;
+        if (position) t.position   = Vector3.zero;
+        if (rotation) t.rotation   = Quaternion.identity;
+        if (scale)    t.localScale = Vector3.one;
     }
 }

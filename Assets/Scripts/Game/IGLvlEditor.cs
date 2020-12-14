@@ -15,8 +15,8 @@ public class IGLvlEditor : MonoBehaviour
     private string thisLevelName;
     private static int newLevelIndex;
     public static int editLevelNumber;
-    private static Transform objects => Game.instance.level ? Game.instance.level.transform.Find("Objects") : null;
-    private static Transform world => Game.instance.level ? Game.instance.level.transform.Find("World") : null;
+    private static Transform objectParent => Game.instance.level ? Game.instance.level.objectParent : null;
+    private static Transform world => Game.instance.level ? Game.instance.level.world : null;
 
     private GameObject editScreenGO;
 
@@ -70,6 +70,7 @@ public class IGLvlEditor : MonoBehaviour
     GraphicRaycaster m_Raycaster;
     EventSystem m_EventSystem;
 
+<<<<<<< HEAD
     private bool selectMode = false;
     private bool selectMode3D = false;
 
@@ -89,6 +90,11 @@ public class IGLvlEditor : MonoBehaviour
 
     private bool markersRemoved;
 
+=======
+    private bool selectMode;
+
+#if UNITY_EDITOR
+>>>>>>> main
     void Start()
     {
         camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
@@ -106,6 +112,7 @@ public class IGLvlEditor : MonoBehaviour
             }
             if (!marker)
             {
+<<<<<<< HEAD
                 marker = new GameObject("Marker");
                 marker.transform.parent = objects;
                 GameObject markerCube = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/MarkerCube")) as GameObject;
@@ -113,6 +120,12 @@ public class IGLvlEditor : MonoBehaviour
                 markerCube.transform.parent = marker.transform;
                 lastPos = markerCube.transform.position;
                 baseCube = markerCube.transform;
+=======
+                marker = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Marker")) as GameObject;
+                marker.transform.position = new Vector3(-2, -1, -1);
+                marker.transform.parent = objectParent;
+                lastPos = marker.transform.position;
+>>>>>>> main
             }
 
             uiSwipe = false;
@@ -402,10 +415,49 @@ public class IGLvlEditor : MonoBehaviour
         Slide(lastDir);
     }
 
+<<<<<<< HEAD
     public void ScrapLevel()
     {
         stopEdit();
         foreach (Transform child in objects)
+=======
+    public void AddLevel()
+    {
+        const string nameRoot = "New Level";
+        string name = nameRoot + (newLevelIndex > 0 ? " (" + newLevelIndex + ")" : "");
+        for (; Resources.Load<Level>(ResourceLoader.Path<Level>() + name); name = nameRoot + " (" + ++newLevelIndex + ")") ;
+        var levelObj = Instantiate(ResourceLoader.Get<GameObject>("Prefabs/LevelTemplate"));
+        levelObj.name = name;
+        thisLevelName = name;
+        thisLevel = levelObj.GetComponent<Level>();
+        PrefabUtility.SaveAsPrefabAsset(levelObj, ResourceLoader.Path<Level>(true) + name + ".prefab");
+        Object.DestroyImmediate(levelObj);
+        ++newLevelIndex;
+
+        Edit();
+        LoadLevel(name);
+    }
+
+    public void SaveLevel()
+    {
+        PrefabUtility.SaveAsPrefabAsset(thisLevel.gameObject, ResourceLoader.Path<Level>(true) + thisLevelName + ".prefab");
+    }
+
+    public void SaveAndQuit()
+    {
+        stopEdit();
+        Game.instance.LoadLevel(Game.instance.levelNumber);
+    }
+
+    public void ScrapLevel()
+    {
+        Level[] lvlList = ResourceLoader.GetAll<Level>();
+        string name = lvlList[lvlList.Length-1].name;
+        editing = false;
+        AssetDatabase.DeleteAsset("Assets/Resources/Prefabs/Levels/" + name + ".prefab");
+        //Destroy(objects.GetComponentInChildren<Omino>().gameObject);
+        foreach (Transform child in objectParent)
+>>>>>>> main
         {
             Destroy(child.gameObject);
         }
@@ -466,6 +518,7 @@ public class IGLvlEditor : MonoBehaviour
 
     public void AddObjectItem(string name)
     {
+<<<<<<< HEAD
         foreach (Transform markerCube in marker.transform)
         {
             var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
@@ -475,10 +528,19 @@ public class IGLvlEditor : MonoBehaviour
             obj.transform.rotation = markerCube.rotation;
             Slide(lastDir);
         }
+=======
+        var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+        obj.name = name;
+        obj.transform.SetParent(world);
+        obj.transform.position = marker.transform.position.Round();
+        obj.transform.rotation = marker.transform.rotation;
+        Slide(lastDir);
+>>>>>>> main
     }
 
     public void RemoveItem()
     {
+<<<<<<< HEAD
         string add = "Add";
         string theName = activeObj.name.Replace(add, "");
         foreach (Transform markerCube in marker.transform)
@@ -495,6 +557,14 @@ public class IGLvlEditor : MonoBehaviour
                     Destroy(child.gameObject);
             }
         }
+=======
+        var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+        obj.name = name;
+        obj.transform.SetParent(objectParent);
+        obj.transform.position = marker.transform.position.Round();
+        obj.transform.rotation = marker.transform.rotation;
+        Slide(lastDir);
+>>>>>>> main
     }
 
     public void stopEdit()
@@ -509,6 +579,7 @@ public class IGLvlEditor : MonoBehaviour
         if (marker)
             marker.SetActive(true);
     }
+<<<<<<< HEAD
 
     public void SelectToggle()
     {
@@ -528,5 +599,8 @@ public class IGLvlEditor : MonoBehaviour
     {
         selectMode3D = !selectMode3D;
     }
+=======
+#endif
+>>>>>>> main
 }
 
