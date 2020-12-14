@@ -227,6 +227,8 @@ public class Omino : MonoBehaviour
 		Vector3 hPos = dir * -9000f;
 		Quaternion rot = Quaternion.Inverse(Quaternion.LookRotation(dir));
 
+        AudioManager.PlaySound("swish", 0.2f);
+
 		// Get appropriate center point
 		foreach (Transform cube in cubes)
 		{
@@ -274,7 +276,6 @@ public class Omino : MonoBehaviour
                 {
                     Detect();
                     lastPos = transform.position;
-                    FindObjectOfType<AudioManager>().PlaySound("Roll");
                     EndMove();
                 }
                 else
@@ -309,7 +310,7 @@ public class Omino : MonoBehaviour
 
         Tween.Stop(GetInstanceID());
         sliding = true;
-        FindObjectOfType<AudioManager>().PlaySound("Slide");
+        AudioManager.PlaySound("slide");
         Tween.Position(
             target:    transform,
             endValue:  transform.position + dir,
@@ -417,7 +418,9 @@ public class Omino : MonoBehaviour
 
                             result.Add(obj);
 							repeat = true;
-						}
+                            AudioManager.PlaySound("attach");
+                            AudioManager.PlaySound("step", 3f, 3.5f);
+                        }
 					}
 				}
 			}
@@ -435,7 +438,11 @@ public class Omino : MonoBehaviour
         foreach (Transform cube in cubes)
             foreach (RaycastHit hit in Physics.RaycastAll(cube.position + offset, Vector3.down, 1f))
                 if (IsObstacle(hit.collider.gameObject.layer))
+                {
+                    if (!sliding)
+                        AudioManager.PlaySound("step", 3f, 3.5f);
                     return true;
+                }
         return false;
     }
     private bool DetectGround() => DetectGround(Vector3.zero);
@@ -465,13 +472,18 @@ public class Omino : MonoBehaviour
             duration:         Constants.transitionTime * t,
             delay:            0f,
             easeCurve:        Tween.EaseLinear,
-            completeCallback: EndMove
+            completeCallback: () =>
+            {
+                AudioManager.PlaySound("step", 3f, 3.5f);
+                EndMove();
+            }
         );
 
 		rejected = true;
 		dropping = false;
 
-        FindObjectOfType<AudioManager>().PlaySound("Reject");
+        AudioManager.StopSound("swish");
+        AudioManager.PlaySound("reject");
     }
 
 	private void EndMove()
@@ -556,7 +568,7 @@ public class Omino : MonoBehaviour
                 Destroy(lowestCube.gameObject);
             if (cubes.childCount == 1)
             {
-                FindObjectOfType<AudioManager>().PlaySound("Drop");
+                AudioManager.PlaySound("drop");
                 Win();
             }
 			//++holed;

@@ -2,32 +2,50 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
-using System;
 
 public class AudioManager : MonoBehaviour
 {
-    public Sound[] sounds;
-    // Start is called before the first frame update
-    void Awake()
+    private static AudioManager instance;
+
+    private Sound[] sounds;
+
+    private void Awake()
     {
-        foreach(Sound s in sounds)
-        {
-            s.source = gameObject.AddComponent<AudioSource>();
-            s.source.clip = s.clip;
-            s.source.volume = s.volume;
-            s.source.pitch = s.pitch;
-            s.source.loop = s.isLoop;
-            s.source.panStereo = s.stereo;
-        }
+        instance = this;
+
+        var clips = ResourceLoader.GetAll<AudioClip>();
+        sounds = new Sound[clips.Length];
+        for (int i = 0; i < clips.Length; ++i)
+            sounds[i] = new Sound(this, clips[i]);
+
+        //foreach (Sound s in sounds)
+        //{
+        //    s.source = gameObject.AddComponent<AudioSource>();
+        //    s.source.clip = s.clip;
+        //    s.source.volume = s.volume;
+        //    s.source.pitch = s.pitch;
+        //    s.source.loop = s.isLoop;
+        //    s.source.panStereo = s.stereo;
+        //}
     }
 
-    public void PlaySound(string name)
+    public static void PlaySound(string name, float minPitch, float maxPitch)
     {
-        Sound s = Array.Find(sounds, sound => sound.name == name);
-        if (s == null)
-        {
-            return;
-        }
+        if (!instance) return;
+
+        Sound s = System.Array.Find(instance.sounds, sound => sound.source.clip.name.Equals(name));
+        if (s == null) return;
+        s.source.pitch = Random.Range(minPitch, maxPitch);
         s.source.Play();
+    }
+    public static void PlaySound(string name, float minPitch = 1) => PlaySound(name, minPitch, minPitch);
+
+    public static void StopSound(string name)
+    {
+        if (!instance) return;
+
+        Sound s = System.Array.Find(instance.sounds, sound => sound.source.clip.name.Equals(name));
+        if (s == null) return;
+        s.source.Stop();
     }
 }

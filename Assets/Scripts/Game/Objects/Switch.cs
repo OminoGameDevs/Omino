@@ -39,6 +39,7 @@ public class Switch : Activator
     {
         Tween.Stop(mesh.GetInstanceID());
         mesh.localScale = new Vector3(1f, 0.001f, 1f);
+        AudioManager.PlaySound("switch");
     }
 
     protected override void OnDeactivate()

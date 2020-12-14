@@ -9,7 +9,6 @@ using UnityEngine.EventSystems;
 
 public class IGLvlEditor : MonoBehaviour
 {
-#if UNITY_EDITOR
     private const float cooldown = 0.05f;
 
     public Level thisLevel;
@@ -47,6 +46,7 @@ public class IGLvlEditor : MonoBehaviour
 
     private bool selectMode;
 
+#if UNITY_EDITOR
     void Start()
     {
         camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();

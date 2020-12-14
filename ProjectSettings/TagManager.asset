@@ -9,6 +9,9 @@ TagManager:
   - TouchSurface
   - World
   - Bottom
+  - Ice
+  - Slide
+  - Level
   - Marker
   layers:
   - Default
@@ -20,7 +23,7 @@ TagManager:
   - 
   - 
   - Obstacle
-  - 
+  - Ice
   - 
   - 
   - 

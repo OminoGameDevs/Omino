@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
-[System.Serializable]
-public class Sound{
-    public string name;
-    public AudioClip clip;
-    [Range(0f, 1f)]
-    public float volume;
-    [Range(0.1f, 3f)]
-    public float pitch;
-    public bool isLoop;
-    [Range(-1f, 1f)]
-    public float stereo;
-    [HideInInspector]
+public class Sound {
     public AudioSource source;
+
+    public Sound(AudioManager mgr, AudioClip clip)
+    {
+        source = mgr.gameObject.AddComponent<AudioSource>();
+        source.clip = clip;
+    }
 }
