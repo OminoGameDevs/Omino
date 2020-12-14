@@ -18,11 +18,11 @@ public abstract class ColoredObject : MonoBehaviour
     public UnityEngine.Color colorValue {
         get {
             switch (color) {
-                case Color.Red: return new UnityEngine.Color(0.9f, 0f, 0f);
-                case Color.Gold: return new UnityEngine.Color(0.9f, 0.6f, 0f);
-                case Color.Green: return new UnityEngine.Color(0.0f, 0.75f, 0f);
-                case Color.Blue: return new UnityEngine.Color(0.0f, 0.6f, 0.9f);
-                case Color.Pink: return new UnityEngine.Color(0.9f, 0f, 0.9f);
+                case Color.Red:   return new UnityEngine.Color(1f,    0f,    0f);
+                case Color.Gold:  return new UnityEngine.Color(1f,    0.9f, 0f);
+                case Color.Green: return new UnityEngine.Color(0f,    0.9f,  0f);
+                case Color.Blue:  return new UnityEngine.Color(0f,    0.75f, 1f);
+                case Color.Pink:  return new UnityEngine.Color(1f,    0f,    1f);
                 default: return default(UnityEngine.Color);
             }
         }

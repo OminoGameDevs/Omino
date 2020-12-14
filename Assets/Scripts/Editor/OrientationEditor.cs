@@ -36,33 +36,29 @@ public class OrientationEditor : Editor
 
         switch (transform.GetOrientableDirections())
         {
-            case Directions.XYZ:
-                Handles.DrawWireDisc(transform.position, transform.forward, 0.5f);
-                Handles.DrawWireDisc(transform.position, transform.right,   0.5f);
-
-                if (Camera.current)
-                    Handles.DrawWireDisc(transform.position, Camera.current.transform.position - transform.position, 0.5f);
-
-                SetOrientation( transform.up);
-                SetOrientation(-transform.up);
-
-                goto case Directions.XZ;
-
             case Directions.XZ:
                 Handles.DrawWireDisc(transform.position, transform.up, 0.5f);
 
-                SetOrientation( transform.forward, true);
-                SetOrientation(-transform.forward);
-                SetOrientation( transform.right);
-                SetOrientation(-transform.right);
+                SetOrientationXZ( transform.forward, true);
+                SetOrientationXZ(-transform.forward);
+                SetOrientationXZ( transform.right);
+                SetOrientationXZ(-transform.right);
 
                 break;
 
-            default: break;
+            case Directions.XYZ:
+                SetOrientationXYZ( transform.forward);
+                SetOrientationXYZ(-transform.forward);
+                SetOrientationXYZ( transform.right);
+                SetOrientationXYZ(-transform.right);
+                SetOrientationXYZ( transform.up, true);
+                SetOrientationXYZ(-transform.up);
+
+                break;
         }
     }
 
-    private void SetOrientation(Vector3 dir, bool primary = false)
+    private void SetOrientationXZ(Vector3 dir, bool primary = false)
     {
         float size = primary ? 1f : 0.5f;
         if (Handles.Button(transform.position + dir * 0.5f, Quaternion.LookRotation(dir), size, size, Handles.ArrowHandleCap) && !primary)
@@ -70,5 +66,15 @@ public class OrientationEditor : Editor
             Undo.RecordObject(transform, "Change Orientation");
             transform.forward = dir;
         }
+    }
+
+    private void SetOrientationXYZ(Vector3 dir, bool primary = false)
+    {
+        if (Handles.Button(transform.position - dir * 0.5f, Quaternion.LookRotation(dir), 0.2f, 0.2f, Handles.RectangleHandleCap) && !primary)
+        {
+            Undo.RecordObject(transform, "Change Orientation");
+            transform.up = dir;
+        }
+        Handles.DrawWireDisc(transform.position - transform.up * 0.5f, transform.up, 0.15f);
     }
 }

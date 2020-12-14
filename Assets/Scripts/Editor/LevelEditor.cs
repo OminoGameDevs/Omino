@@ -111,9 +111,10 @@ public class LevelEditor : EditorWindow
         const string nameRoot = "New Level";
         string name = nameRoot + (newLevelIndex > 0 ? " (" + newLevelIndex + ")" : "");
         for (; Resources.Load<Level>(ResourceLoader.Path<Level>() + name); name = nameRoot + " (" + ++newLevelIndex + ")") ;
-        var levelObj = Instantiate(ResourceLoader.Get<GameObject>("Prefabs/LevelTemplate"));
+        var levelObj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/LevelTemplate")) as GameObject;
+        PrefabUtility.UnpackPrefabInstance(levelObj, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
         PrefabUtility.SaveAsPrefabAsset(levelObj, ResourceLoader.Path<Level>(true) + name + ".prefab");
-        Object.DestroyImmediate(levelObj);
+        DestroyImmediate(levelObj);
         ++newLevelIndex;
 
         LoadLevel(name);

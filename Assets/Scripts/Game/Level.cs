@@ -49,6 +49,7 @@ public class Level : MonoBehaviour
         }
     }
 
+    private HashSet<Material> shadedMaterials = new HashSet<Material>();
     private Dictionary<int, IceGroup> iceGroups = new Dictionary<int, IceGroup>();
 
     private void Awake()
@@ -60,6 +61,13 @@ public class Level : MonoBehaviour
 
     private void OnEnable()
     {
+        if (!Application.isPlaying && !GetComponent<MeshCollider>())
+        {
+            var c = gameObject.AddComponent<MeshCollider>();
+            c.sharedMesh = ResourceLoader.Get<Mesh>("BigPlane");
+            c.hideFlags = HideFlags.HideAndDontSave;
+        }
+
         RefreshWorld();
         RenderPipelineManager.beginCameraRendering += UpdateCameras;
     }
@@ -68,7 +76,6 @@ public class Level : MonoBehaviour
     {
         foreach (var kv in iceGroups)
         {
-            DestroyImmediate(kv.Value.particleCamera.gameObject);
             DestroyImmediate(kv.Value.reflectionCamera.gameObject);
             DestroyImmediate(kv.Value.material);
         }
@@ -87,7 +94,6 @@ public class Level : MonoBehaviour
         {
             if (!iceTiles.Any(kv => kv.Key == key))
             {
-                DestroyImmediate(iceGroups[key].particleCamera.gameObject);
                 DestroyImmediate(iceGroups[key].reflectionCamera.gameObject);
                 DestroyImmediate(iceGroups[key].material);
                 iceGroups.Remove(key);
@@ -98,26 +104,17 @@ public class Level : MonoBehaviour
             if (!iceGroups.ContainsKey(kv.Key))
             {
                 var reflectionCam = new GameObject("IceReflectionCamera").AddComponent<Camera>();
-                var particleCam = new GameObject("IceParticleCamera").AddComponent<Camera>();
                 reflectionCam.cameraType = CameraType.Reflection;
-                particleCam.cameraType = CameraType.Reflection;
-                particleCam.clearFlags = CameraClearFlags.Color;
-                particleCam.backgroundColor = Color.black;
-                var reflectionTex = new RenderTexture(512, 512, 16);
-                var particleTex = new RenderTexture(512, 512, 16);
+                var reflectionTex = new RenderTexture(256, 256, 16);
                 reflectionCam.targetTexture = reflectionTex;
-                particleCam.targetTexture = particleTex;
-                reflectionCam.cullingMask = ~(1 << LayerMask.NameToLayer("Ice"));
-                particleCam.cullingMask = 1 << LayerMask.NameToLayer("Ice");
+                //reflectionCam.cullingMask = ~(1 << LayerMask.NameToLayer("Ice"));
                 reflectionCam.gameObject.hideFlags = HideFlags.HideAndDontSave;
-                particleCam.gameObject.hideFlags = HideFlags.HideAndDontSave;
 
                 var mat = Instantiate(iceMat);
                 mat.name = iceMat.name + kv.Key;
                 mat.SetTexture("_ReflectionTex", reflectionTex);
-                mat.SetTexture("_ParticleTex", particleTex);
 
-                iceGroups.Add(kv.Key, new IceGroup(mat, reflectionCam, particleCam));
+                iceGroups.Add(kv.Key, new IceGroup(mat, reflectionCam));
             }
             foreach (var obj in kv)
                 obj.GetComponent<Renderer>().sharedMaterial = iceGroups[kv.Key].material;
@@ -155,24 +152,18 @@ public class Level : MonoBehaviour
         {
             float y = kv.Key - 0.498f;
             Camera reflectionCam = kv.Value.reflectionCamera;
-            Camera particleCam = kv.Value.particleCamera;
             reflectionCam.transform.position = new Vector3(mainCamPos.x, 2*y - mainCamPos.y, mainCamPos.z);
             reflectionCam.transform.eulerAngles = new Vector3(-mainCamEuler.x, mainCamEuler.y, mainCamEuler.z);
-            particleCam.transform.position = reflectionCam.transform.position;
-            particleCam.transform.rotation = reflectionCam.transform.rotation;
 
             var reflection = getReflection(new Vector3(mainCamPos.x, y, mainCamPos.z));
             reflectionCam.worldToCameraMatrix = mainCam.worldToCameraMatrix * reflection;
-            particleCam.worldToCameraMatrix   = mainCam.worldToCameraMatrix * reflection;
 
             var p = reflectionCam.worldToCameraMatrix.MultiplyPoint(new Vector3(mainCamPos.x, y, mainCamPos.z));
             var n = reflectionCam.worldToCameraMatrix.MultiplyVector(Vector3.up).normalized;
             reflectionCam.projectionMatrix = mainCam.CalculateObliqueMatrix(new Vector4(n.x, n.y, n.z, -Vector3.Dot(p, n)));
-            particleCam.projectionMatrix   = reflectionCam.projectionMatrix;
 
             GL.invertCulling = true;
             UniversalRenderPipeline.RenderSingleCamera(context, reflectionCam);
-            UniversalRenderPipeline.RenderSingleCamera(context, particleCam);
             GL.invertCulling = false;
         }
     }
@@ -195,9 +186,8 @@ public class Level : MonoBehaviour
                 child.SetParent(objectParent);
         }
 
-        var wallMat = ResourceLoader.Get<Material>("Wall");
-        wallMat.SetFloat("_yMin", minWallY);
-        wallMat.SetFloat("_yMax", maxWallY);
+        Shader.SetGlobalFloat("_BottomY", minWallY);
+        Shader.SetGlobalFloat("_TopY", maxWallY);
     }
 
 #if UNITY_EDITOR
@@ -232,13 +222,11 @@ public class Level : MonoBehaviour
     {
         public readonly Material material;
         public readonly Camera reflectionCamera;
-        public readonly Camera particleCamera;
 
-        public IceGroup(Material material, Camera reflectionCamera, Camera particleCamera)
+        public IceGroup(Material material, Camera reflectionCamera)
         {
             this.material = material;
             this.reflectionCamera = reflectionCamera;
-            this.particleCamera = particleCamera;
         }
     }
 }

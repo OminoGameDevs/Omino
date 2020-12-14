@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4164503566908157597}
-  - component: {fileID: 4900872896554955523}
+  - component: {fileID: 38932633236413451}
   - component: {fileID: 5911093776404270974}
   m_Layer: 0
   m_Name: Switch
@@ -33,7 +33,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &4900872896554955523
+--- !u!65 &38932633236413451
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -99,17 +99,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: b710dcb16334caa44a296c67dd72357d,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b710dcb16334caa44a296c67dd72357d,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b710dcb16334caa44a296c67dd72357d,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b710dcb16334caa44a296c67dd72357d,
         type: 3}

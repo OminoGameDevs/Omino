@@ -8,34 +8,42 @@ public class FollowCamera : MonoBehaviour
     private static readonly float dropDistance = 50;
     private static readonly Vector3 offset = new Vector3(-10,10,-10);
 
-    private bool ended;
+    private bool starting;
+    private bool ending;
 
     private void OnLevelStart()
     {
         transform.position = Game.instance.level.omino.bottom + offset + Vector3.up * dropDistance;
-    }
+        starting = true;
+        Tween.Position(
+            target:    transform,
+            endValue:  Game.instance.level.omino.bottom + offset,
+            duration:  Constants.fadeOutTime,
+            delay:     0f,
+            easeCurve: Tween.EaseOutStrong,
+            completeCallback: () => starting = false
+        );
+}
 
     private void OnLevelEnd()
     {
-        ended = true;
+        ending = true;
         Tween.Position(
             target:    transform,
             endValue:  transform.position - Vector3.up * dropDistance,
             duration:  Constants.fadeOutTime,
             delay:     0f,
             easeCurve: Tween.EaseInStrong,
-            completeCallback: () => ended = false
+            completeCallback: () => ending = false
         );
     }
 
     private void Update()
     {
-        if (!ended && Game.instance.playing)
+        if (!starting && !ending)
         {
             Vector3 v = default(Vector3);
             transform.position = Vector3.SmoothDamp(transform.position, Game.instance.level.omino.bottom + offset, ref v, 0.1f);
         }
-        else if (!Game.instance.playing)
-            transform.position = IGLvlEditor.instance.marker.transform.position + offset;
     }
 }

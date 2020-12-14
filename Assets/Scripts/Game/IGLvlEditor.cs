@@ -9,6 +9,7 @@ using UnityEngine.EventSystems;
 
 public class IGLvlEditor : MonoBehaviour
 {
+#if UNITY_EDITOR
     private const float cooldown = 0.05f;
 
     public Level thisLevel;
@@ -287,5 +288,6 @@ public class IGLvlEditor : MonoBehaviour
         if (marker)
             marker.SetActive(true);
     }
+#endif
 }
 

@@ -5,6 +5,7 @@ using UnityEngine;
 using Pixelplacement;
 using System.Linq;
 
+[Orientable(Directions.XYZ)]
 [ExecuteInEditMode]
 public class Switch : Activator
 {

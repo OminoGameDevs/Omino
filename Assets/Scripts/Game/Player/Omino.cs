@@ -21,13 +21,16 @@ public class Omino : MonoBehaviour
 
 	public Vector3 center {
 		get {
-            if (!cubes || cubes.childCount == 0)
+            if (this && !cubes || cubes.childCount == 0)
                 return transform.position;
 
+            else if (!this)
+                return default(Vector3);
+
 			Vector3 result = Vector3.zero;
-			foreach (Transform cube in cubes)
-				result += cube.position;
-			return result / cubes.childCount;
+            foreach (Transform cube in cubes)
+                result += cube.position;
+            return result / cubes.childCount;
 		}
 	}
 
@@ -39,7 +42,7 @@ public class Omino : MonoBehaviour
 //----------------------------------------------------------------------------------------------------------------------------------------
 
 	private new Camera camera;
-	private Transform cubes;
+    public Transform cubes { get; private set; }
 
 	private bool touching;
 	private Vector3 touchPos;
@@ -88,34 +91,15 @@ public class Omino : MonoBehaviour
 		foreach (Transform cube in cubes)
 			cube.gameObject.layer = 0;
 
-		//cubes.gameObject.Merge(Merger.MergeType.Hide);
-	}
+        RecalculateBottom();
+    }
 
     private void Update()
 	{
 		if (!instance)
 			instance = this;
 
-        if (!Game.instance.playing) return;
-
-        // Calculate bottom
-        float minDist = float.PositiveInfinity;
-        Vector3? closestFloor = null;
-        foreach (var hit in Physics.SphereCastAll(center, 0.25f, -Vector3.up))
-        {
-            if (IsObstacle(hit.collider.gameObject.layer) && hit.distance < minDist)
-            {
-                minDist = hit.distance;
-                closestFloor = hit.point;
-            }
-        }
-        if (closestFloor.HasValue)
-        {
-            bottom = closestFloor.Value;
-            lastBottomY = bottom.y;
-        }
-        else
-            bottom = new Vector3(center.x, lastBottomY, center.z);
+        RecalculateBottom();
 
         // Send trigger stay messages
         if (!moving)
@@ -194,6 +178,26 @@ public class Omino : MonoBehaviour
 				rejected = false;
 		}
 	}
+
+    private void RecalculateBottom()
+    {
+        float minDist = float.PositiveInfinity;
+        Vector3? closestFloor = null;
+        foreach (Transform cube in cubes)
+        {
+            foreach (var hit in Physics.SphereCastAll(cube.position, 0.25f, -Vector3.up))
+            {
+                if (IsObstacle(hit.collider.gameObject.layer) && hit.distance < minDist)
+                {
+                    minDist = hit.distance;
+                    closestFloor = hit.point;
+                }
+            }
+        }
+        if (closestFloor.HasValue)
+            lastBottomY = closestFloor.Value.y;
+        bottom = new Vector3(center.x, lastBottomY, center.z);
+    }
 
     public CubeStack GetCubeStackAt(Vector3 position)
     {
@@ -369,7 +373,8 @@ public class Omino : MonoBehaviour
 		}
 
         // Find and assimilate cubes, if none found, find ground, if no ground, drop
-        if (DetectNewCubes() || DetectGround())
+        var newCubes = DetectNewCubes();
+        if (newCubes.Length > 0 || DetectGround())
         {
             dropping = false;
             holed = 0;
@@ -380,16 +385,17 @@ public class Omino : MonoBehaviour
                 obj.SendMessage("OnOminoExit", GetCubeStackAt(obj.transform.position), SendMessageOptions.DontRequireReceiver);
             triggered.Clear();
 
-            // Send trigger enter messages
+            // Send trigger enter messages from old cubes
             foreach (Transform cube in cubes)
             {
-                foreach (RaycastHit hit in Physics.RaycastAll(cube.position + Vector3.up, Vector3.down, 1.499f))
+                if (newCubes.Contains(cube)) continue;
+                foreach (var collider in Physics.OverlapBox(cube.position, Vector3.one * 0.499f))
                 {
-                    if (hit.transform.CompareTag("World") || hit.transform.parent == cubes)
+                    if (collider.transform == cube || collider.transform.parent == cubes || collider.CompareTag("World"))
                         continue;
 
-                    triggered.Add(hit.transform.gameObject);
-                    hit.transform.SendMessage("OnOminoEnter", GetCubeStackAt(hit.point), SendMessageOptions.DontRequireReceiver);
+                    triggered.Add(collider.gameObject);
+                    collider.transform.SendMessage("OnOminoEnter", GetCubeStackAt(cube.position - Vector3.down * 0.5f), SendMessageOptions.DontRequireReceiver);
                 }
             }
 
@@ -401,9 +407,9 @@ public class Omino : MonoBehaviour
 	}
 
 	// Find and assimilate cubes
-	private bool DetectNewCubes()
+	private Transform[] DetectNewCubes()
 	{
-		bool found = false;
+        var result = new List<Transform>();
 		bool repeat = false;
 		do
 		{
@@ -432,7 +438,7 @@ public class Omino : MonoBehaviour
 							obj.SetParent(cubes);
                             //obj.GetComponent<Renderer>().sharedMaterial = ResourceLoader.Get<Material>("Cube");
 
-							found = true;
+                            result.Add(obj);
 							repeat = true;
 						}
 					}
@@ -444,7 +450,7 @@ public class Omino : MonoBehaviour
 		//if (found)
 		//	cubes.gameObject.Merge(Merger.MergeType.Hide);
 
-		return found;
+		return result.ToArray();
 	}
 
 	private bool DetectGround(Vector3 offset)
@@ -555,6 +561,24 @@ public class Omino : MonoBehaviour
 		//Camera.main.transform.parent.SendMessage("FadeOut");
 		Game.instance.Win();
 	}
+
+    public Transform[] GetAdjacentCubes(Transform cube)
+    {
+        var result = new List<Transform>();
+        if (cube.CompareTag("Cube"))
+            foreach (var dir in new Vector3[] { Vector3.forward, Vector3.back, Vector3.right, Vector3.left, Vector3.up, Vector3.down })
+                foreach (var hit in Physics.RaycastAll(cube.position, dir, 1f))
+                    if (hit.transform != cube && hit.collider.CompareTag("Cube"))
+                        result.Add(hit.transform);
+        return result.ToArray();
+    }
+
+    public void Detach(Transform cube)
+    {
+        if (!cube.CompareTag("Cube")) return;
+        cube.SetParent(transform.parent);
+        cube.gameObject.layer = LayerMask.NameToLayer("Obstacle");
+    }
 
 	private void OnTriggerEnter(Collider other)
 	{

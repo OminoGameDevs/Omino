@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshRenderer))]
@@ -26,10 +24,11 @@ public class MaterialInstance : MonoBehaviour
     private void InstantiateMaterial()
     {
         var renderer = GetComponent<Renderer>();
-
         if (material)
         {
-            renderer.sharedMaterial = Instantiate(material);
+            var instance = Instantiate(material);
+            instance.hideFlags = HideFlags.DontSave;
+            renderer.sharedMaterial = instance;
             renderer.sharedMaterial.name = "*" + material.name;
         }
     }

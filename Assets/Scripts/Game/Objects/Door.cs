@@ -63,9 +63,9 @@ public class Door : Activatable
                     valueUpdatedCallback: SetOffset
                 );
             }
-            else if (state == State.Closing && !(blocked && (transform.forward != -Vector3.up || Omino.instance.moving)))
+            else if (state == State.Closing && !(blocked && (transform.up != Vector3.up || Omino.instance.moving)))
             {
-                if (blocked && transform.forward == -Vector3.up)
+                if (blocked && transform.up == Vector3.up)
                     Omino.instance.Slide(Vector3.up, Tween.EaseIn);
 
                 state = State.Idle;
@@ -99,15 +99,11 @@ public class Door : Activatable
 
     private void SetOffset(float offset)
     {
-        mesh.localPosition = Vector3.forward * offset * openDistance;
-        float size = Mathf.Lerp(1f, 0.99f, offset);
-        mesh.localScale = new Vector3(
-            transform.forward.x == 0 ? size : 1f,
-            transform.forward.y == 0 ? size : 1f,
-            transform.forward.z == 0 ? size : 1f
-        );
+        mesh.localPosition = -Vector3.up * offset * openDistance;
+        float size = Mathf.Lerp(1f, openDistance, offset);
+        mesh.localScale = new Vector3(size, 1f, size);
 
-        if (transform.forward.y == 0)
+        if (transform.up.y == 1)
             trigger.center = Vector3.up * (1-offset);
     }
 
@@ -135,6 +131,16 @@ public class Door : Activatable
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireMesh(ResourceLoader.Get<Mesh>("Arrow"), transform.position, Quaternion.LookRotation(transform.forward));
+        const float outerSize = 0.9f;
+        const float innerSize = 0.8f;
+        const float outerDist = 0.5f;
+        float innerDist = (startOpen ? outerDist : Mathf.Pow(outerDist, 2) * (1 - innerSize));
+        Vector3 outerExt = (Vector3.one - transform.up.Abs()) * outerSize;
+        Vector3 innerExt = (Vector3.one - transform.up.Abs()) * innerSize;
+        if (!startOpen)
+            innerExt += transform.up.Abs() * 2f * (outerDist - innerDist);
+
+        Gizmos.DrawWireCube(transform.position - transform.up * outerDist, outerExt);
+        Gizmos.DrawWireCube(transform.position - transform.up * innerDist, innerExt);
     }
 }

@@ -35,6 +35,8 @@ public static class Extensions
                                                                                          Mathf.Round(quat.eulerAngles.y / 90f) * 90f,
                                                                                          Mathf.Round(quat.eulerAngles.z / 90f) * 90f));
 
+    public static Vector3 Abs(this Vector3 v) => new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
+
     public static void Reset(this Transform t, bool position = true, bool rotation = true, bool scale = true)
     {
         if (position) t.position   = Vector3.zero;
