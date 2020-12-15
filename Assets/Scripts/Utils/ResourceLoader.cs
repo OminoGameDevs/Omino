@@ -8,6 +8,7 @@ public class ResourceLoader
     {
         string root = (full ? "Assets/Resources/" : "");
 
+        if (typeof(T) == typeof(AudioClip))      return root + "Audio/";
         if (typeof(T) == typeof(Font))           return root + "Fonts/";
         if (typeof(T) == typeof(Material))       return root + "Materials/";
         if (typeof(T) == typeof(Mesh))           return root + "Meshes/";

@@ -4,22 +4,19 @@ using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
-    public const float fadeOutTime = 2f;
-    IGLvlEditor lvlEditor;
-
-    //---------------------------------------------------------------------------------------------------------------------------------------------------------
-
     public static Game instance { get; private set; }
     public int levelNumber { get; private set; }
-    public Level level;
-    public Level[] levels;
-    public Omino _omino { get; private set; }
+    public Level level { get; set; }
+    public Level[] levels { get; set; }
+
+    public IGLvlEditor lvlEditor;
+    private Omino omino;
     public bool playing;
     public bool testPlaying;
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-private void Awake()
+    private void Awake()
 	{
 		instance = this;
         levels = ResourceLoader.GetAll<Level>();
@@ -32,9 +29,14 @@ private void Awake()
 	{
         if (!testPlaying)
         {
-            LoadLevel(levelNumber % levels.Length + 1);
-            Play();
+            BroadcastMessage("OnLevelEnd", SendMessageOptions.DontRequireReceiver);
+            Invoke("NextLevel", Constants.fadeOutTime);
         }
+	}
+
+    private void NextLevel()
+    {
+        LoadLevel(levelNumber % levels.Length + 1);
     }
 	
 	public void LoadLevel(int number)
@@ -44,6 +46,8 @@ private void Awake()
             Destroy(level.gameObject);
         level = Instantiate(levels[number-1]);
         level.transform.SetParent(instance.transform);
+
+        BroadcastMessage("OnLevelStart", SendMessageOptions.DontRequireReceiver);
 	}
 
     public void Restart() => LoadLevel(levelNumber);
@@ -53,8 +57,8 @@ private void Awake()
         playing = true;
         if (level != null)
         {
-            _omino = level.GetComponentInChildren<Omino>();
-            _omino.enabled = true;
+            omino = level.GetComponentInChildren<Omino>();
+            omino.enabled = true;
         }
     }
 
@@ -70,8 +74,8 @@ private void Awake()
         testPlaying = false;
         if (level != null)
         {
-            _omino = level.GetComponentInChildren<Omino>();
-            _omino.enabled = false;
+            omino = level.GetComponentInChildren<Omino>();
+            omino.enabled = false;
         }
     }
 }

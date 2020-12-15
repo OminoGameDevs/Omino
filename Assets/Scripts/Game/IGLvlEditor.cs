@@ -15,8 +15,8 @@ public class IGLvlEditor : MonoBehaviour
     private string thisLevelName;
     private static int newLevelIndex;
     public static int editLevelNumber;
-    private static Transform objects => Game.instance.level ? Game.instance.level.transform.Find("Objects") : null;
-    private static Transform world => Game.instance.level ? Game.instance.level.transform.Find("World") : null;
+    private static Transform objectParent => Game.instance.level ? Game.instance.level.objectParent : null;
+    private static Transform world => Game.instance.level ? Game.instance.level.world : null;
 
     private GameObject editScreenGO;
 
@@ -94,7 +94,7 @@ public class IGLvlEditor : MonoBehaviour
         camera = Game.instance.transform.Find("Camera").GetComponent<Camera>();
     }
 
- 
+
     void Update()
     {
         if (editing)
@@ -202,7 +202,7 @@ public class IGLvlEditor : MonoBehaviour
                         removeMarkers();
                         markersRemoved = true;
                     }
-                        
+
                 }
             }
             Vector3 dir = Vector3.zero;
@@ -405,7 +405,7 @@ public class IGLvlEditor : MonoBehaviour
     public void ScrapLevel()
     {
         stopEdit();
-        foreach (Transform child in objects)
+        foreach (Transform child in objectParent)
         {
             Destroy(child.gameObject);
         }
@@ -448,7 +448,7 @@ public class IGLvlEditor : MonoBehaviour
         }
         if (!foundLevel)
             Debug.LogError("Failed to load level \"" + name + "\"");
-      
+
     }
 
     public void AddWorldItem(string name)
@@ -466,15 +466,15 @@ public class IGLvlEditor : MonoBehaviour
 
     public void AddObjectItem(string name)
     {
-        foreach (Transform markerCube in marker.transform)
-        {
-            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
-            obj.name = name;
-            obj.transform.SetParent(objects);
-            obj.transform.position = markerCube.position.Round();
-            obj.transform.rotation = markerCube.rotation;
-            Slide(lastDir);
-        }
+      foreach (Transform markerCube in marker.transform)
+      {
+          var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+          obj.name = name;
+          obj.transform.SetParent(objects);
+          obj.transform.position = markerCube.position.Round();
+          obj.transform.rotation = markerCube.rotation;
+          Slide(lastDir);
+      }
     }
 
     public void RemoveItem()
@@ -485,7 +485,7 @@ public class IGLvlEditor : MonoBehaviour
         {
             foreach (Transform child in objects)
             {
-                
+
                 if (child.position == markerCube.position && child.gameObject.name == theName)
                     Destroy(child.gameObject);
             }
@@ -528,5 +528,9 @@ public class IGLvlEditor : MonoBehaviour
     {
         selectMode3D = !selectMode3D;
     }
-}
 
+    public void selectToggle3D()
+    {
+        selectMode3D = !selectMode3D;
+    }
+}

@@ -17,11 +17,23 @@ public class LevelEditor : EditorWindow
         // Get existing open window or if none, make a new one:
         var editor = GetWindow<LevelEditor>();
         editor.titleContent = new GUIContent("Level Editor");
+    }
+
+    private void Awake()
+    {
         SceneView.duringSceneGui += OnScene;
+    }
+
+    private void OnDestroy()
+    {
+        SceneView.duringSceneGui -= OnScene;
     }
 
     private void OnGUI()
     {
+        SceneView.duringSceneGui -= OnScene;
+        SceneView.duringSceneGui += OnScene;
+
         // Select Level
         GUILayout.Label("Select Level");
         var lvlList = new List<string>();
@@ -48,7 +60,7 @@ public class LevelEditor : EditorWindow
         }
     }
 
-    private static void OnScene(SceneView sceneview)
+    private void OnScene(SceneView sceneview)
     {
         var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
         if (prefabStage != null && prefabStage.scene.isLoaded)
@@ -65,7 +77,7 @@ public class LevelEditor : EditorWindow
         Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
         if (level.gameObject.scene.GetPhysicsScene().Raycast(ray.origin, ray.direction, out hit))
         {
-            if (hit.collider.CompareTag("Bottom") || hit.collider.CompareTag("World"))
+            if (hit.collider.CompareTag("Level") || hit.collider.CompareTag("World"))
             {
                 point = (hit.point + hit.normal * 0.5f).Round();
                 Handles.DrawWireCube(point.Value, Vector3.one);
@@ -97,25 +109,13 @@ public class LevelEditor : EditorWindow
     private static void AddLevel()
     {
         const string nameRoot = "New Level";
-        string name = nameRoot;
+        string name = nameRoot + (newLevelIndex > 0 ? " (" + newLevelIndex + ")" : "");
         for (; Resources.Load<Level>(ResourceLoader.Path<Level>() + name); name = nameRoot + " (" + ++newLevelIndex + ")") ;
-        level = new GameObject(name).AddComponent<Level>();
-
-        var objects = new GameObject("Objects").transform;
-        objects.SetParent(level.transform);
-
-        var world = new GameObject("World").transform;
-        world.SetParent(level.transform);
-
-        var omino = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Omino")) as GameObject;
-        omino.transform.SetParent(objects);
-
-        for (int x = -1; x <= 1; ++x)
-            for (int z = -1; z <= 1; ++z)
-                AddWall(new Vector3(x, -1, z));
-
-        PrefabUtility.SaveAsPrefabAsset(level.gameObject, ResourceLoader.Path<Level>(true) + name + ".prefab");
-        Object.DestroyImmediate(level.gameObject);
+        var levelObj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/LevelTemplate")) as GameObject;
+        PrefabUtility.UnpackPrefabInstance(levelObj, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+        PrefabUtility.SaveAsPrefabAsset(levelObj, ResourceLoader.Path<Level>(true) + name + ".prefab");
+        DestroyImmediate(levelObj);
+        ++newLevelIndex;
 
         LoadLevel(name);
     }
@@ -146,7 +146,7 @@ public class LevelEditor : EditorWindow
 
     private static void AddWall(Vector3 position, bool undoable = false)
     {
-        var wall = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Wall")) as GameObject;
+        var wall = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Objects/Wall")) as GameObject;
         wall.name = "Wall";
         wall.transform.SetParent(world);
         wall.transform.position = position.Round();
@@ -166,5 +166,4 @@ public class LevelEditor : EditorWindow
             DestroyImmediate(wall);
     }
 
-    private void OnDestroy() => SceneView.duringSceneGui -= OnScene;
 }
