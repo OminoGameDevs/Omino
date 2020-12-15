@@ -455,7 +455,7 @@ public class IGLvlEditor : MonoBehaviour
     {
         foreach (Transform markerCube in marker.transform)
         {
-            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Objects/" + name)) as GameObject;
             obj.name = name;
             obj.transform.SetParent(Game.instance.level.world);
             obj.transform.position = markerCube.position.Round();
@@ -468,7 +468,7 @@ public class IGLvlEditor : MonoBehaviour
     {
       foreach (Transform markerCube in marker.transform)
       {
-          var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+          var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Characters/" + name)) as GameObject;
           obj.name = name;
           obj.transform.SetParent(objectParent);
           obj.transform.position = markerCube.position.Round();
