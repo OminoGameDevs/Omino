@@ -55,9 +55,6 @@ public class FollowCamera : MonoBehaviour
                     if (!editAngleSet)
                     {
                         editAngleSet = true;
-                        offset.x = -10;
-                        offset.y = 10;
-                        offset.z = -10;
                         transform.position = Vector3.SmoothDamp(transform.position, IGLvlEditor.instance.markerCenter + offset, ref v, 0.1f);
                         var markers = GameObject.FindGameObjectsWithTag("Marker");
                         if (markers.Length > 0)
@@ -75,9 +72,6 @@ public class FollowCamera : MonoBehaviour
                 if (editAngleSet)
                 {
                     editAngleSet = false;
-                    offset.x = -10;
-                    offset.y = 10;
-                    offset.z = -10;
                     var omino = FindObjectOfType<Omino>();
                     if (omino)
                     {
@@ -90,7 +84,8 @@ public class FollowCamera : MonoBehaviour
                 if (!starting && !ending)
                 {
                     v = default(Vector3);
-                    transform.position = Vector3.SmoothDamp(transform.position, Game.instance.level.omino.bottom + offset, ref v, 0.1f);
+                    if (Game.instance && Game.instance.level && Game.instance.level.omino)
+                        transform.position = Vector3.SmoothDamp(transform.position, Game.instance.level.omino.bottom + offset, ref v, 0.1f);
                 }
             }
         }

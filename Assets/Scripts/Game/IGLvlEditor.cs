@@ -107,7 +107,7 @@ public class IGLvlEditor : MonoBehaviour
             if (!marker)
             {
                 marker = new GameObject("Marker");
-                marker.transform.parent = objects;
+                marker.transform.parent = objectParent;
                 GameObject markerCube = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/MarkerCube")) as GameObject;
                 markerCube.transform.position = new Vector3(-2, -1, -1);
                 markerCube.transform.parent = marker.transform;
@@ -470,7 +470,7 @@ public class IGLvlEditor : MonoBehaviour
       {
           var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
           obj.name = name;
-          obj.transform.SetParent(objects);
+          obj.transform.SetParent(objectParent);
           obj.transform.position = markerCube.position.Round();
           obj.transform.rotation = markerCube.rotation;
           Slide(lastDir);
@@ -483,7 +483,7 @@ public class IGLvlEditor : MonoBehaviour
         string theName = activeObj.name.Replace(add, "");
         foreach (Transform markerCube in marker.transform)
         {
-            foreach (Transform child in objects)
+            foreach (Transform child in objectParent)
             {
 
                 if (child.position == markerCube.position && child.gameObject.name == theName)
@@ -522,11 +522,6 @@ public class IGLvlEditor : MonoBehaviour
         {
             toggle3D.SetActive(false);
         }
-    }
-
-    public void selectToggle3D()
-    {
-        selectMode3D = !selectMode3D;
     }
 
     public void selectToggle3D()

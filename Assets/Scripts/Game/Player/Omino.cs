@@ -105,36 +105,39 @@ public class Omino : MonoBehaviour
             foreach (var obj in triggered)
                 obj.SendMessage("OnOminoStay", GetCubeStackAt(obj.transform.position), SendMessageOptions.DontRequireReceiver);
 
-        if (Input.GetMouseButton(0))
-		{
-			foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
-			{
-				if (hit.collider.CompareTag("TouchSurface"))
-				{
-                    var hitpoint = hit.point + Vector3.Scale(Camera.main.transform.position, new Vector3(1,0,1));
+        if (Game.instance.playing)
+        {
+            if (Input.GetMouseButton(0))
+            {
+                foreach (RaycastHit hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition)))
+                {
+                    if (hit.collider.CompareTag("TouchSurface"))
+                    {
+                        var hitpoint = hit.point + Vector3.Scale(Camera.main.transform.position, new Vector3(1, 0, 1));
 
-                    if (!touching)
-					{
-						touching = true;
-						touchPos = hitpoint;
-					}
-					else
-					{
-						Vector3 delta = hitpoint - touchPos;
-						if (delta.magnitude > 1f)
-						{
-							touchPos = hitpoint;
-							swipeDir = delta.normalized;
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			touching = false;
-			swipeDir = Vector3.zero;
-		}
+                        if (!touching)
+                        {
+                            touching = true;
+                            touchPos = hitpoint;
+                        }
+                        else
+                        {
+                            Vector3 delta = hitpoint - touchPos;
+                            if (delta.magnitude > 1f)
+                            {
+                                touchPos = hitpoint;
+                                swipeDir = delta.normalized;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                touching = false;
+                swipeDir = Vector3.zero;
+            }
+        }
 
 		Vector3 dir = Vector3.zero;
 
