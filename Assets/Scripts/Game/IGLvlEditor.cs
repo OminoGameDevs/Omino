@@ -15,7 +15,7 @@ public class IGLvlEditor : MonoBehaviour
     private string thisLevelName;
     private static int newLevelIndex;
     public static int editLevelNumber;
-    private static Transform objects => Game.instance.level ? Game.instance.level.transform.Find("Objects") : null;
+    private static Transform objectParent => Game.instance.level ? Game.instance.level.objectParent : null;
     private static Transform world => Game.instance.level ? Game.instance.level.world : null;
 
     private GameObject editScreenGO;
@@ -26,7 +26,7 @@ public class IGLvlEditor : MonoBehaviour
     {
         get
         {
-            if (!marker || marker.transform.childCount == 0)
+            if (!marker|| marker.transform.childCount == 0)
                 return transform.position;
 
             Vector3 result = Vector3.zero;
@@ -107,7 +107,7 @@ public class IGLvlEditor : MonoBehaviour
             if (!marker)
             {
                 marker = new GameObject("Marker");
-                marker.transform.parent = objects;
+                marker.transform.parent = objectParent;
                 GameObject markerCube = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/MarkerCube")) as GameObject;
                 markerCube.transform.position = new Vector3(-2, -1, -1);
                 markerCube.transform.parent = marker.transform;
@@ -405,7 +405,7 @@ public class IGLvlEditor : MonoBehaviour
     public void ScrapLevel()
     {
         stopEdit();
-        foreach (Transform child in objects)
+        foreach (Transform child in objectParent)
         {
             Destroy(child.gameObject);
         }
@@ -455,7 +455,7 @@ public class IGLvlEditor : MonoBehaviour
     {
         foreach (Transform markerCube in marker.transform)
         {
-            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
+            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Objects/" + name)) as GameObject;
             obj.name = name;
             obj.transform.SetParent(Game.instance.level.world);
             obj.transform.position = markerCube.position.Round();
@@ -466,15 +466,15 @@ public class IGLvlEditor : MonoBehaviour
 
     public void AddObjectItem(string name)
     {
-        foreach (Transform markerCube in marker.transform)
-        {
-            var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/" + name)) as GameObject;
-            obj.name = name;
-            obj.transform.SetParent(objects);
-            obj.transform.position = markerCube.position.Round();
-            obj.transform.rotation = markerCube.rotation;
-            Slide(lastDir);
-        }
+      foreach (Transform markerCube in marker.transform)
+      {
+          var obj = PrefabUtility.InstantiatePrefab(ResourceLoader.Get<GameObject>("Prefabs/Characters/" + name)) as GameObject;
+          obj.name = name;
+          obj.transform.SetParent(objectParent);
+          obj.transform.position = markerCube.position.Round();
+          obj.transform.rotation = markerCube.rotation;
+          Slide(lastDir);
+      }
     }
 
     public void RemoveItem()
@@ -483,7 +483,7 @@ public class IGLvlEditor : MonoBehaviour
         string theName = activeObj.name.Replace(add, "");
         foreach (Transform markerCube in marker.transform)
         {
-            foreach (Transform child in objects)
+            foreach (Transform child in objectParent)
             {
 
                 if (child.position == markerCube.position && child.gameObject.name == theName)
