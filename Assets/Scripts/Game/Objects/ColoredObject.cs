@@ -27,5 +27,31 @@ public abstract class ColoredObject : MonoBehaviour
             }
         }
     }
-    [SerializeField] private Color _color;
+    public Color _color;
+
+    public Color TransformIndexToColor(int value)
+    {
+        switch (value)
+        {
+            case 0: return Color.Red;
+            case 1: return Color.Gold;
+            case 2: return Color.Green;
+            case 3: return Color.Blue;
+            case 4: return Color.Pink;
+            default: return Color.Red;
+        }
+    }
+
+    public int TransformColorToIndex(Color value)
+    {
+        switch (value)
+        {
+            case Color.Red: return 0;
+            case Color.Gold: return 1;
+            case Color.Green: return 2;
+            case Color.Blue: return 3;
+            case Color.Pink: return 4;
+            default: return 0;
+        }
+    }
 }

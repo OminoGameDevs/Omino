@@ -29,16 +29,16 @@ public class AudioManager : MonoBehaviour
         //}
     }
 
-    public static void PlaySound(string name, float minPitch, float maxPitch)
+    public static void PlaySound(string name, float minPitch, float maxPitch, float vol)
     {
         if (!instance) return;
-
         Sound s = System.Array.Find(instance.sounds, sound => sound.source.clip.name.Equals(name));
         if (s == null) return;
         s.source.pitch = Random.Range(minPitch, maxPitch);
+        s.source.volume = vol;
         s.source.Play();
     }
-    public static void PlaySound(string name, float minPitch = 1) => PlaySound(name, minPitch, minPitch);
+    public static void PlaySound(string name, float minPitch = 1, float vol = 1) => PlaySound(name, minPitch, minPitch, vol);
 
     public static void StopSound(string name)
     {

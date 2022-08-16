@@ -13,14 +13,14 @@ using UnityEditor.Experimental.SceneManagement;
 [ExecuteInEditMode]
 public class Level : MonoBehaviour
 {
-    public Transform objectParent {
+    public Transform levelObjects {
         get {
-            if (!_objectParent)
-                _objectParent = transform.Find("Objects");
-            return _objectParent;
+            if (!_levelObjects)
+                _levelObjects = transform.Find("Objects");
+            return _levelObjects;
         }
     }
-    private Transform _objectParent;
+    private Transform _levelObjects;
     public Transform world {
         get {
             if (!_world)
@@ -29,11 +29,21 @@ public class Level : MonoBehaviour
         }
     }
     private Transform _world;
+    public Transform editorObjects
+    {
+        get
+        {
+            if (!_editorObjects)
+                _editorObjects = transform.Find("EditorObjects");
+            return _editorObjects;
+        }
+    }
+    private Transform _editorObjects;
 
     public Omino omino {
         get {
             if (!_omino)
-                _omino = objectParent.GetComponentInChildren<Omino>();
+                _omino = levelObjects.GetComponentInChildren<Omino>();
             return _omino;
         }
     }
@@ -43,7 +53,7 @@ public class Level : MonoBehaviour
     public GameObject[] objects {
         get {
             var result = new List<GameObject>();
-            foreach (Transform t in objectParent)
+            foreach (Transform t in levelObjects)
                 result.Add(t.gameObject);
             return result.ToArray();
         }
@@ -182,10 +192,19 @@ public class Level : MonoBehaviour
                 if (child.localPosition.y + 0.5f > maxWallY) maxWallY = child.localPosition.y + 0.5f;
                 child.Reset(position: false);
             }
-            else
-                child.SetParent(objectParent);
+            else 
+                child.SetParent(levelObjects);
         }
 
+        /*
+        foreach (Transform child in levelObjects)
+        {
+            if (child.CompareTag("EditObject"))
+            {
+                child.SetParent(transform);
+            }
+        }
+        */
         Shader.SetGlobalFloat("_BottomY", minWallY);
         Shader.SetGlobalFloat("_TopY", maxWallY);
     }
@@ -196,14 +215,18 @@ public class Level : MonoBehaviour
         if (Application.isPlaying) return;
 
         transform.Reset();
-        objectParent.Reset();
+        levelObjects.Reset();
         world.Reset();
 
         foreach (Transform child in transform)
-            if (child != world && child != objectParent)
-                child.SetParent(child.CompareTag("World") ? world : objectParent);
+            if (child != world && child != levelObjects && child != editorObjects)
+            {
+                if (child.CompareTag("EditObject"))
+                    child.SetParent(editorObjects);
+                else child.SetParent(child.CompareTag("World") ? world : levelObjects);
+            }
 
-        foreach (Transform child in objectParent)
+        foreach (Transform child in levelObjects)
         {
             child.localPosition = child.localPosition.Round();
             child.localRotation = child.localRotation.Round();
@@ -211,8 +234,10 @@ public class Level : MonoBehaviour
 
             if (child.CompareTag("World"))
                 child.SetParent(world);
-        }
 
+            if (child.CompareTag("EditObject"))
+                child.SetParent(transform);
+        }
         RefreshWorld();
     }
 

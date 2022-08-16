@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Pixelplacement;
 
 [Orientable(Directions.XYZ)]
@@ -17,7 +18,7 @@ public class Door : Activatable
 
     private const float openDistance = 0.999f;
 
-    [SerializeField] private bool startOpen;
+    public bool startOpen;
 
     private Transform mesh;
     private new Renderer renderer;
@@ -26,6 +27,9 @@ public class Door : Activatable
     private bool open;
     private bool blocked;
     private State state;
+
+    private bool triggeredSettings;
+    private bool displayArrow;
 
     private void Awake()
     {
@@ -49,6 +53,37 @@ public class Door : Activatable
 
         if (Application.isPlaying)
         {
+            if (LevelEditor.instance?.editing == true)
+            {
+                if (!displayArrow)
+                {
+                    transform.Find("Arrow").gameObject.SetActive(true);
+                    displayArrow = true;
+                }
+            }
+            else
+            {
+                if (displayArrow)
+                {
+                    /*
+                    if (!triggeredSettings)
+                    {
+                        triggeredSettings = true;
+                        mesh = transform.GetChild(0);
+                        renderer = GetComponent<Renderer>();
+                        trigger = GetComponent<BoxCollider>();
+                        open = startOpen;
+                        if (open)
+                        {
+                            SetOffset(1f);
+                            mesh.gameObject.layer = 0;
+                        }
+                    }
+                    */
+                    transform.Find("Arrow").gameObject.SetActive(false);
+                    displayArrow = false;
+                }
+            }
             if (state == State.Opening && !blocked)
             {
                 state = State.Idle;
@@ -142,5 +177,51 @@ public class Door : Activatable
 
         Gizmos.DrawWireCube(transform.position - transform.up * outerDist, outerExt);
         Gizmos.DrawWireCube(transform.position - transform.up * innerDist, innerExt);
+    }
+
+    public void ChangeColor()
+    {
+        int value = GameObject.Find("DoorOptionsDropdown").GetComponent<Dropdown>().value;
+        Color newColor;
+        switch (value)
+        {
+            case 0: newColor = Color.Red; break;
+            case 1: newColor = Color.Gold; break;
+            case 2: newColor = Color.Green; break;
+            case 3: newColor = Color.Blue; break;
+            case 4: newColor = Color.Pink; break;
+            default: newColor = Color.Red; break;
+        }
+        _color = newColor;
+    }
+
+    public void SetStartOpen(bool value)
+    {
+        startOpen = value;
+    }
+
+    public void ChangeColorWithString(string stringValue)
+    {
+        int value = int.Parse(stringValue);
+        _color = TransformIndexToColor(value);
+    }
+
+    public void ChangeColorWithColor(Color col)
+    {
+        _color = col;
+    }
+
+    public void UpdateDoorSettings()
+    {
+        mesh = transform.GetChild(0);
+        renderer = GetComponent<Renderer>();
+        trigger = GetComponent<BoxCollider>();
+        open = startOpen;
+        if (open)
+        {
+            SetOffset(1f);
+            mesh.gameObject.layer = 0;
+        }
+        UpdateActivateableSettings();
     }
 }

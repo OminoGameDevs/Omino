@@ -4,7 +4,7 @@ using UnityEngine;
 
 public abstract class Activator : ColoredObject
 {
-    [SerializeField, Range(0, 600)] private int resetTime;
+    [SerializeField, Range(0, 600)] public int resetTime;
 
     public bool activated { get; private set; }
     public float timeLeft { get; private set; }

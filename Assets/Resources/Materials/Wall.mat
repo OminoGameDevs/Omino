@@ -11,9 +11,9 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 51b9e169d6783f34e92f0a9e2b8131a7,
     type: 3}
   m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_LightmapFlags: 2
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -26,7 +26,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats: []
     m_Colors:
-    - _Color: {r: 0.5960785, g: 0.5960785, b: 0.5960785, a: 0}
+    - _Color: {r: 0.5960785, g: 0.5960785, b: 0.5960785, a: 0.09803922}
 --- !u!114 &8395127870258188964
 MonoBehaviour:
   m_ObjectHideFlags: 11

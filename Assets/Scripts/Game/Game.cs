@@ -9,7 +9,6 @@ public class Game : MonoBehaviour
     public Level level { get; set; }
     public Level[] levels { get; set; }
 
-    public IGLvlEditor lvlEditor;
     private Omino omino;
     public bool playing;
     public bool testPlaying;
@@ -64,8 +63,8 @@ public class Game : MonoBehaviour
 
     public void TestPlay()
     {
-        Play();
         testPlaying = true;
+        Play();
     }
 
     public void Pause()

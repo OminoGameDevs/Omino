@@ -13,7 +13,6 @@ public abstract class Activatable : ColoredObject
     {
         if (activators == null)
             activators = Game.instance.level.GetObjectsOfType<Activator>().Where(a => a.color == color).ToArray();
-
         bool shouldBeActivated = activators.Length > 0 && !activators.Any(a => !a.activated);
         if (shouldBeActivated && !activated)
         {
@@ -29,4 +28,9 @@ public abstract class Activatable : ColoredObject
 
     protected virtual void OnActivate() { }
     protected virtual void OnDeactivate() { }
+
+    public void UpdateActivateableSettings()
+    {
+        activators = Game.instance.level.GetObjectsOfType<Activator>().Where(a => a.color == color).ToArray();
+    }
 }

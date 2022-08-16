@@ -31,7 +31,7 @@ public class Omino : MonoBehaviour
 		}
 	}
 
-    public Vector3 direction { get; private set; } = Vector3.back;
+    public Vector3 direction { get; set; } = Vector3.back;
 
     public Vector3 bottom { get; private set; }
     private float lastBottomY;
@@ -230,7 +230,7 @@ public class Omino : MonoBehaviour
 		Vector3 hPos = dir * -9000f;
 		Quaternion rot = Quaternion.Inverse(Quaternion.LookRotation(dir));
 
-        AudioManager.PlaySound("swish", 0.2f);
+        AudioManager.PlaySound("swish2", 0.8f, 1.3f);
 
 		// Get appropriate center point
 		foreach (Transform cube in cubes)
@@ -443,7 +443,7 @@ public class Omino : MonoBehaviour
                 if (IsObstacle(hit.collider.gameObject.layer))
                 {
                     if (!sliding)
-                        AudioManager.PlaySound("step", 3f, 3.5f);
+                        AudioManager.PlaySound("click2", 0.8f, 1.3f);
                     return true;
                 }
         return false;
@@ -477,7 +477,7 @@ public class Omino : MonoBehaviour
             easeCurve:        Tween.EaseLinear,
             completeCallback: () =>
             {
-                AudioManager.PlaySound("step", 3f, 3.5f);
+                AudioManager.PlaySound("click2", 0.8f, 1.3f);
                 EndMove();
             }
         );
@@ -485,8 +485,8 @@ public class Omino : MonoBehaviour
 		rejected = true;
 		dropping = false;
 
-        AudioManager.StopSound("swish");
-        AudioManager.PlaySound("reject");
+        AudioManager.StopSound("swish2");
+        AudioManager.PlaySound(name: "reject", vol: 0.1f);
     }
 
 	private void EndMove()

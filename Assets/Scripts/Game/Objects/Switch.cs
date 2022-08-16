@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 using Pixelplacement;
 using System.Linq;
@@ -9,13 +10,15 @@ using System.Linq;
 [ExecuteInEditMode]
 public class Switch : Activator
 {
-    [SerializeField] private bool stayPressed;
+    public bool stayPressed;
 
     private Transform mesh;
     private new Renderer renderer;
 
     private Switch[] others;
     private bool allActivated => activated && !others.Any(sw => !sw.activated);
+
+    private bool triggeredSettings;
 
     private void Awake()
     {
@@ -33,6 +36,17 @@ public class Switch : Activator
         if (!mesh) mesh = transform.GetChild(0);
         if (!renderer) renderer = mesh.GetComponent<Renderer>();
         renderer.sharedMaterial.color = colorValue;
+        if (Application.isPlaying && !triggeredSettings)
+        {
+            if (Game.instance.playing)
+            {
+                if (LevelEditor.instance?.editing != true)
+                {
+                    others = (from sw in Game.instance.level.GetObjectsOfType<Switch>() where sw != this && sw.color == color select sw).ToArray();
+                    triggeredSettings = true;
+                }
+            }
+        }
     }
 
     protected override void OnActivate()
@@ -62,5 +76,31 @@ public class Switch : Activator
             Deactivate();
         else if (!allActivated)
             Deactivate(0f);
+    }
+
+    public void ChangeColorWithString(string stringValue)
+    {
+        int value = int.Parse(stringValue);
+        _color = TransformIndexToColor(value);
+    }
+
+    public void ChangeColorWithColor(Color col)
+    {
+        _color = col;
+    }
+
+    public void SetStayPressed(bool value)
+    {
+        stayPressed = value;
+    }
+
+    public void SetResetTime(int value)
+    {
+        resetTime = value;
+    }
+
+    public void UpdateSwitchSettings()
+    {
+        others = (from sw in Game.instance.level.GetObjectsOfType<Switch>() where sw != this && sw.color == color select sw).ToArray();
     }
 }

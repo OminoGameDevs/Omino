@@ -43,44 +43,18 @@ public class FollowCamera : MonoBehaviour
 
     private void Update()
     {
-        Camera camera = GetComponent<Camera>();
         Vector3 v = default(Vector3);
         if (Game.instance && Game.instance.level)
         {
-            if (IGLvlEditor.instance && IGLvlEditor.instance.editing)
+            if (LevelEditor.instance && LevelEditor.instance.editing)
             {
-                camera.orthographic = true;
-                if (IGLvlEditor.instance.marker != null)
+                if (LevelEditor.instance?.followReference != null)
                 {
-                    if (!editAngleSet)
-                    {
-                        editAngleSet = true;
-                        transform.position = Vector3.SmoothDamp(transform.position, IGLvlEditor.instance.markerCenter + offset, ref v, 0.1f);
-                        var markers = GameObject.FindGameObjectsWithTag("Marker");
-                        if (markers.Length > 0)
-                        {
-                            Vector3 target = IGLvlEditor.instance.markerCenter.Round();
-                            transform.position = target + offset;
-                            transform.LookAt(target, Vector3.up);
-                        }
-                    }
-                    transform.position = Vector3.SmoothDamp(transform.position, IGLvlEditor.instance.markerCenter + offset, ref v, 0.1f);
+                    transform.position = Vector3.SmoothDamp(transform.position, LevelEditor.instance.followReference.transform.position + offset, ref v, 0.1f);
                 }
             }
             else
             {
-                if (editAngleSet)
-                {
-                    editAngleSet = false;
-                    var omino = FindObjectOfType<Omino>();
-                    if (omino)
-                    {
-                        Vector3 target = omino.center.Round();
-                        transform.position = target + offset;
-                        transform.LookAt(target, Vector3.up);
-                    }
-                }
-                camera.orthographic = false;
                 if (!starting && !ending)
                 {
                     v = default(Vector3);
@@ -91,6 +65,7 @@ public class FollowCamera : MonoBehaviour
         }
         else
         {
+            /*
             var omino = FindObjectOfType<Omino>();
             if (omino)
             {
@@ -98,16 +73,7 @@ public class FollowCamera : MonoBehaviour
                 transform.position = target + offset;
                 transform.LookAt(target, Vector3.up);
             }
-            var markers = GameObject.FindGameObjectsWithTag("Marker");
-            GameObject marker;
-            if (markers.Length > 0)
-            {
-                camera.orthographic = true;
-                marker = markers[0];
-                Vector3 target = IGLvlEditor.instance.markerCenter.Round();
-                transform.position = target + offset;
-                transform.LookAt(target, Vector3.up);
-            }
+            */
         }
     }
 }
